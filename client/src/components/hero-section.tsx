@@ -58,7 +58,7 @@ export default function HeroSection() {
       <div className="container mx-auto px-6 text-center z-10">
         <div className="max-w-5xl mx-auto">
           <motion.h1 
-            className="text-6xl md:text-8xl font-bold mb-8"
+            className="text-5xl md:text-7xl font-bold mb-7"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -70,25 +70,24 @@ export default function HeroSection() {
           </motion.h1>
           
           <motion.p 
-            className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto"
+            className="text-xl md:text-2xl text-muted-foreground mb-9 max-w-4xl mx-auto"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             data-testid="text-hero-subtitle"
           >
-            Revolutionary blockchain-powered platform that automates milestone-based payments through smart contracts, 
-            eliminating disputes and ensuring trust between clients and freelancers worldwide.
+            A blockchain-powered platform built for MindSprint 48 Hour Hackathon that automates milestone-based payments through smart contracts, eliminating disputes and ensuring trust between clients and freelancers.
           </motion.p>
 
           <motion.div 
-            className="flex flex-col sm:flex-row gap-6 justify-center mb-16"
+            className="flex flex-col sm:flex-row gap-5 justify-center mb-13"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
             <Button 
               size="lg" 
-              className="px-8 py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-xl text-lg font-semibold hover:scale-105 transition-transform animate-glow"
+              className="px-7 py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-xl text-lg font-semibold hover:scale-105 transition-transform animate-glow"
               data-testid="button-hire-talent"
             >
               <UserCheck className="mr-2" />
@@ -97,32 +96,12 @@ export default function HeroSection() {
             <Button 
               size="lg" 
               variant="outline" 
-              className="px-8 py-4 glass-morphism text-foreground rounded-xl text-lg font-semibold hover:scale-105 transition-transform"
+              className="px-7 py-4 glass-morphism text-foreground rounded-xl text-lg font-semibold hover:scale-105 transition-transform"
               data-testid="button-work-freelancer"
             >
               <Laptop className="mr-2" />
               Work as Freelancer
             </Button>
-          </motion.div>
-
-          <motion.div 
-            className="grid grid-cols-3 gap-8 max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-          >
-            <div className="text-center" data-testid="stat-escrow">
-              <div className="text-3xl font-bold gradient-text">$2.4M+</div>
-              <div className="text-muted-foreground">Secured in Escrow</div>
-            </div>
-            <div className="text-center" data-testid="stat-projects">
-              <div className="text-3xl font-bold gradient-text">15,000+</div>
-              <div className="text-muted-foreground">Projects Completed</div>
-            </div>
-            <div className="text-center" data-testid="stat-success">
-              <div className="text-3xl font-bold gradient-text">99.9%</div>
-              <div className="text-muted-foreground">Payment Success</div>
-            </div>
           </motion.div>
         </div>
       </div>
