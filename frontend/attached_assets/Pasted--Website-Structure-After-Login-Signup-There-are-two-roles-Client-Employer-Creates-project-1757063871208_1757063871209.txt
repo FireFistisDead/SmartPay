@@ -1,0 +1,239 @@
+📑 Website Structure (After Login/Signup)
+
+There are two roles:
+
+Client (Employer) → Creates projects, funds milestones.
+
+Freelancer (Worker) → Browses projects, submits milestone work.
+
+So the post-login flow will differ slightly for each role.
+
+1. Dashboard (Role-Based Landing Page)
+📌 Client Dashboard
+
+Top Navbar: Wallet address, notifications, profile, logout.
+
+Side Menu: Create Project, My Projects, Payments, Disputes, Profile.
+
+Main View:
+
+Quick Stats → Ongoing Projects, Total Spent, Pending Approvals.
+
+CTA button → “Create New Project”.
+
+List of active projects with progress bars for milestones.
+
+📌 Freelancer Dashboard
+
+Top Navbar: Wallet address, notifications, profile, logout.
+
+Side Menu: Browse Projects, My Contracts, Payments, Disputes, Profile.
+
+Main View:
+
+Quick Stats → Active Contracts, Total Earned, Pending Payments.
+
+CTA button → “Browse Projects”.
+
+List of accepted projects with milestone progress.
+
+2. Project Creation Page (Client Only)
+
+Form Fields:
+
+Project Title, Description, Tags/Category.
+
+Milestones (Add multiple, each with description + payment amount).
+
+Upload supporting files (stored in IPFS).
+
+Smart Contract Integration:
+
+Deploys contract + locks escrow for the first milestone.
+
+Animations:
+
+Progress steps (like a wizard form).
+
+Confirmation animation when contract is created.
+
+3. Browse Projects Page (Freelancer Only)
+
+Filter/Search Bar: By category, budget, timeline.
+
+Project Cards:
+
+Title, budget, number of milestones, client rating.
+
+“View Details” button.
+
+Project Detail View:
+
+Milestone breakdown with payment amounts.
+
+Apply/Accept button → triggers smart contract participation.
+
+Animations:
+
+Hover flip cards.
+
+Animated skeleton loaders when projects fetch.
+
+4. Project Details / Milestone Tracker (Both Roles)
+
+Shared View:
+
+Timeline of milestones with animated progress bar.
+
+Deliverable submission (Freelancer).
+
+Approve/Reject milestone (Client).
+
+Escrow status (locked, released, disputed).
+
+Blockchain Integration:
+
+Ethers.js → Execute smart contract methods: lockFunds(), releaseFunds(), disputeFunds().
+
+Animations:
+
+Coin-drop animation when funds are released.
+
+Locked vault animation when escrow is active.
+
+5. Payment Page
+
+Client View:
+
+Pending payments, escrow summary, total spent.
+
+Freelancer View:
+
+Completed payments, pending approvals, total earned.
+
+Blockchain Transaction Logs:
+
+Show hash, status (pending/confirmed).
+
+Animations:
+
+Transaction loading animation.
+
+Success checkmark on confirmation.
+
+6. Dispute Resolution Page
+
+If milestone is rejected:
+
+Client/Freelancer sees “Dispute Raised” status.
+
+Basic Demo Flow:
+
+Admin/Oracle resolves dispute (for hackathon MVP).
+
+Funds either released or refunded.
+
+UI:
+
+Chat-like interface for client & freelancer to post comments.
+
+Animations:
+
+Locked escrow vault icon pulsing until resolved.
+
+7. Profile Page (Both Roles)
+
+Details: Name, bio, skills (for freelancer) / company info (for client).
+
+Wallet Address & KYC Status.
+
+Ratings & Reviews.
+
+Edit Profile Settings.
+
+Animations:
+
+Smooth card flips for reviews.
+
+Editable fields highlight with animation.
+
+8. Settings & Notifications
+
+Notifications:
+
+Milestone submitted, payment released, dispute raised.
+
+Settings:
+
+Wallet change, password/security, theme toggle (dark/light).
+
+Animations:
+
+Push notification animation.
+
+Dark/light mode with smooth transition.
+
+📘 Documentation (Developer-Oriented)
+🔹 Tech Stack
+
+Frontend: React + Vite + Tailwind CSS + Framer Motion.
+
+Blockchain: Solidity smart contracts deployed on Ethereum Sepolia / Polygon Mumbai.
+
+Wallet Integration: ethers.js.
+
+Backend: Node.js + Express.js.
+
+Database: MongoDB Atlas.
+
+Storage: IPFS via Pinata.
+
+🔹 Page Routing
+
+/login → Login/Register page.
+
+/dashboard → Role-based landing (client/freelancer).
+
+/create-project → Project creation form (client).
+
+/browse-projects → Project listings (freelancer).
+
+/project/:id → Project details & milestone tracker.
+
+/payments → Payment history.
+
+/disputes → Dispute resolution system.
+
+/profile → Profile page.
+
+/settings → Notifications, preferences.
+
+🔹 Smart Contract Functions
+
+Client:
+
+createProject()
+
+fundMilestone(milestoneId)
+
+approveMilestone(milestoneId)
+
+Freelancer:
+
+acceptProject()
+
+submitMilestone(milestoneId)
+
+Admin/Oracle:
+
+resolveDispute(milestoneId, decision)
+
+🔹 Security
+
+OpenZeppelin libraries for contract safety.
+
+Slither for auditing contracts.
+
+All IPFS-stored documents hashed + immutable.
+
+⚡ This setup ensures clean separation of roles, smooth user flow, and award-winning UI/UX with animations at every critical step.
