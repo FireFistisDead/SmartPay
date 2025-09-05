@@ -158,7 +158,7 @@ export default function FreelancerDashboard() {
         </div>
       </nav>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6 py-8 pt-24">
         <div className="flex gap-8">
           {/* Sidebar */}
           <aside className="w-64 space-y-2">
