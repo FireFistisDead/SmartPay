@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import { useParallax } from "@/hooks/use-parallax";
 import { Button } from "@/components/ui/button";
 import { UserCheck, Laptop } from "lucide-react";
-import ParticleBackground from "./particle-background";
 
 const FloatingIcon = ({ icon, className, delay = 0 }: { icon: React.ReactNode; className: string; delay?: number }) => (
   <motion.div
@@ -27,9 +26,8 @@ export default function HeroSection() {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden blockchain-grid pt-20" ref={ref}>
-      <ParticleBackground />
       {/* Floating Icons */}
-      <div className="absolute inset-0 z-10">
+      <div className="absolute inset-0">
         <FloatingIcon 
           icon={<span className="text-primary">Ξ</span>} 
           className="top-20 left-10" 
@@ -57,29 +55,28 @@ export default function HeroSection() {
         />
       </div>
 
-      <div className="container mx-auto px-6 text-center z-20">
+      <div className="container mx-auto px-6 text-center z-10">
         <div className="max-w-5xl mx-auto">
           <motion.h1 
-            className="text-4xl md:text-6xl lg:text-7xl font-bold mb-8 leading-tight tracking-tight"
+            className="text-5xl md:text-7xl font-bold mb-7"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             data-testid="text-hero-title"
           >
-            <span className="gradient-text block">Decentralized Freelance.</span>
-            <span className="gradient-text block">Automated Payments.</span>
-            <span className="gradient-text block">Total Trust.</span>
+            <span className="gradient-text">Decentralized Freelance.</span><br />
+            <span className="gradient-text">Automated Payments.</span><br />
+            <span className="gradient-text">Total Trust.</span>
           </motion.h1>
           
           <motion.p 
-            className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-12 max-w-4xl mx-auto leading-relaxed font-light"
+            className="text-xl md:text-2xl text-muted-foreground mb-9 max-w-4xl mx-auto"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             data-testid="text-hero-subtitle"
           >
-            A blockchain-powered platform that automates milestone-based payments through smart contracts, 
-            eliminating disputes and ensuring trust between clients and freelancers.
+            A blockchain-powered platform built for MindSprint 48 Hour Hackathon that automates milestone-based payments through smart contracts, eliminating disputes and ensuring trust between clients and freelancers.
           </motion.p>
 
           <motion.div 
@@ -90,7 +87,7 @@ export default function HeroSection() {
           >
             <Button 
               size="lg" 
-              className="px-7 py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-xl text-lg font-semibold hover:scale-105 transition-all duration-300 animate-glow shadow-lg hover:shadow-xl"
+              className="px-7 py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-xl text-lg font-semibold hover:scale-105 transition-transform animate-glow"
               data-testid="button-hire-talent"
             >
               <UserCheck className="mr-2" />
@@ -99,7 +96,7 @@ export default function HeroSection() {
             <Button 
               size="lg" 
               variant="outline" 
-              className="px-7 py-4 glass-morphism text-foreground rounded-xl text-lg font-semibold hover:scale-105 transition-all duration-300 hover:bg-primary/10 border-primary/50"
+              className="px-7 py-4 glass-morphism text-foreground rounded-xl text-lg font-semibold hover:scale-105 transition-transform"
               data-testid="button-work-freelancer"
             >
               <Laptop className="mr-2" />

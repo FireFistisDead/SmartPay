@@ -251,119 +251,33 @@ export default function ClientDashboard() {
               </div>
               
               <div className="grid gap-6">
-                {[
-                  { title: "E-commerce Platform Redesign", freelancer: "@alex_designer", budget: "8.5 ETH", progress: 75, milestones: "3/4 Complete", status: "active", dueDate: "Dec 15, 2024" },
-                  { title: "Smart Contract Development", freelancer: "@web3_dev", budget: "12.0 ETH", progress: 40, milestones: "2/5 Complete", status: "active", dueDate: "Jan 8, 2025" },
-                  { title: "Mobile App UI/UX", freelancer: "@mobile_expert", budget: "6.2 ETH", progress: 90, milestones: "4/4 Complete", status: "review", dueDate: "Dec 10, 2024" }
-                ].map((project, index) => (
-                  <motion.div
-                    key={project.title}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
-                  >
-                    <ProjectCard
-                      title={project.title}
-                      freelancer={project.freelancer}
-                      budget={project.budget}
-                      progress={project.progress}
-                      milestones={project.milestones}
-                      status={project.status}
-                      dueDate={project.dueDate}
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Technology Stack & How It Works */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* How It Works */}
-                <Card className="glass-morphism border-border/50">
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
-                        <span className="text-white text-sm">⚡</span>
-                      </div>
-                      <span>How SmartPay Works</span>
-                    </CardTitle>
-                    <CardDescription>
-                      Our blockchain-powered workflow ensures trust and transparency
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {[
-                      { step: "1", title: "Client Posts Project", desc: "Define requirements and milestone structure" },
-                      { step: "2", title: "Funds Secured in Escrow", desc: "Smart contract locks payment automatically" },
-                      { step: "3", title: "Freelancer Delivers", desc: "Work submitted and verified against milestones" },
-                      { step: "4", title: "Automatic Payment", desc: "Funds released instantly upon completion" }
-                    ].map((item, index) => (
-                      <motion.div
-                        key={item.step}
-                        className="flex items-start space-x-3"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
-                      >
-                        <div className="w-6 h-6 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center text-white text-xs font-bold">
-                          {item.step}
-                        </div>
-                        <div>
-                          <h4 className="font-medium">{item.title}</h4>
-                          <p className="text-sm text-muted-foreground">{item.desc}</p>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </CardContent>
-                </Card>
-
-                {/* Technology Stack */}
-                <Card className="glass-morphism border-border/50">
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <div className="w-8 h-8 bg-gradient-to-r from-secondary to-primary rounded-lg flex items-center justify-center">
-                        <span className="text-white text-sm">🔧</span>
-                      </div>
-                      <span>Technology Stack</span>
-                    </CardTitle>
-                    <CardDescription>
-                      Built with cutting-edge blockchain and web technologies
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-4">
-                      {[
-                        { name: "React", icon: "⚛️", color: "from-blue-500 to-cyan-500" },
-                        { name: "TypeScript", icon: "🔷", color: "from-blue-600 to-blue-800" },
-                        { name: "Solidity", icon: "📜", color: "from-gray-600 to-gray-800" },
-                        { name: "Ethereum", icon: "Ξ", color: "from-purple-500 to-blue-500" },
-                        { name: "IPFS", icon: "📁", color: "from-orange-500 to-red-500" },
-                        { name: "Node.js", icon: "🟢", color: "from-green-500 to-emerald-500" },
-                        { name: "Express", icon: "🚀", color: "from-gray-500 to-gray-700" },
-                        { name: "Tailwind", icon: "🎨", color: "from-teal-500 to-cyan-500" }
-                      ].map((tech, index) => (
-                        <motion.div
-                          key={tech.name}
-                          className="flex items-center space-x-2 p-3 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors"
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.5, delay: 0.6 + index * 0.05 }}
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          <div className={`w-8 h-8 bg-gradient-to-r ${tech.color} rounded-lg flex items-center justify-center text-white text-sm`}>
-                            {tech.icon}
-                          </div>
-                          <span className="text-sm font-medium">{tech.name}</span>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                <ProjectCard
+                  title="E-commerce Platform Redesign"
+                  freelancer="@alex_designer"
+                  budget="8.5 ETH"
+                  progress={75}
+                  milestones="3/4 Complete"
+                  status="active"
+                  dueDate="Dec 15, 2024"
+                />
+                <ProjectCard
+                  title="Smart Contract Development"
+                  freelancer="@web3_dev"
+                  budget="12.0 ETH"
+                  progress={40}
+                  milestones="2/5 Complete"
+                  status="active"
+                  dueDate="Jan 8, 2025"
+                />
+                <ProjectCard
+                  title="Mobile App UI/UX"
+                  freelancer="@mobile_expert"
+                  budget="6.2 ETH"
+                  progress={90}
+                  milestones="4/4 Complete"
+                  status="review"
+                  dueDate="Dec 10, 2024"
+                />
               </div>
             </motion.div>
           </main>
