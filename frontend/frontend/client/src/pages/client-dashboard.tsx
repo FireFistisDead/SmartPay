@@ -212,34 +212,27 @@ export default function ClientDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <StatCard
-                icon={<BarChart3 />}
-                label="Active Projects"
-                value="8"
-                color="text-primary"
-                description="+2 from last month"
-              />
-              <StatCard
-                icon={<Lock />}
-                label="In Escrow"
-                value="24.7 ETH"
-                color="text-secondary"
-                description="$58,432 USD"
-              />
-              <StatCard
-                icon={<CheckCircle />}
-                label="Completed"
-                value="156"
-                color="text-green-400"
-                description="98.5% success rate"
-              />
-              <StatCard
-                icon={<TrendingUp />}
-                label="Total Spent"
-                value="340.2 ETH"
-                color="text-accent"
-                description="This year"
-              />
+              {[
+                { icon: <BarChart3 />, label: "Active Projects", value: "8", color: "text-primary", description: "+2 from last month" },
+                { icon: <Lock />, label: "In Escrow", value: "24.7 ETH", color: "text-secondary", description: "$58,432 USD" },
+                { icon: <CheckCircle />, label: "Completed", value: "156", color: "text-green-400", description: "98.5% success rate" },
+                { icon: <TrendingUp />, label: "Total Spent", value: "340.2 ETH", color: "text-accent", description: "This year" }
+              ].map((stat, index) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1 + index * 0.1 }}
+                >
+                  <StatCard
+                    icon={stat.icon}
+                    label={stat.label}
+                    value={stat.value}
+                    color={stat.color}
+                    description={stat.description}
+                  />
+                </motion.div>
+              ))}
             </motion.div>
 
             {/* Active Projects */}
