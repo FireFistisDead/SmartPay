@@ -34,7 +34,7 @@ export default function Login() {
             <div className="w-12 h-12 bg-gradient-to-r from-primary to-secondary rounded-xl flex items-center justify-center">
               <Wallet className="text-white text-xl" />
             </div>
-            <span className="text-3xl font-bold gradient-text">SmartyPay</span>
+            <span className="text-3xl font-bold gradient-text">SmartPay</span>
           </div>
           <h1 className="text-2xl font-bold mb-2" data-testid="text-login-title">
             Welcome to the Future of Work

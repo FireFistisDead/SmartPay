@@ -107,7 +107,7 @@ export default function ClientDashboard() {
               <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
                 <span className="text-white text-sm font-bold">S</span>
               </div>
-              <span className="text-xl font-bold gradient-text">SmartyPay</span>
+              <span className="text-xl font-bold gradient-text">SmartPay</span>
             </div>
             
             <div className="flex items-center space-x-4">
