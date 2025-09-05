@@ -17,9 +17,8 @@ export default function CallToAction() {
   const { ref } = useScrollAnimation();
 
   return (
-    <section className="py-24 relative overflow-hidden" ref={ref}>
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20"></div>
-      <div className="absolute inset-0 blockchain-grid opacity-30"></div>
+    <section className="py-24 relative overflow-hidden blockchain-grid" ref={ref}>
+      <div className="absolute inset-0 blockchain-grid opacity-5"></div>
       
       <div className="container mx-auto px-6 relative z-10">
         <motion.div 

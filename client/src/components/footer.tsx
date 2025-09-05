@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Link, Twitter, MessageCircle, Send, Github } from "lucide-react";
+import { Wallet, Twitter, MessageCircle, Send, Github } from "lucide-react";
 
 const FooterSection = ({ title, links }: { title: string; links: string[] }) => (
   <div>
@@ -32,8 +32,6 @@ const SocialLink = ({ icon, href, testId }: { icon: React.ReactNode; href: strin
 
 const BlockchainTicker = () => {
   const items = [
-    { symbol: "ETH", icon: "Ξ" },
-    { symbol: "POLYGON", icon: "⬡" },
     { symbol: "IPFS", icon: "🗃️" },
     { symbol: "CHAINLINK", icon: "🔗" },
     { symbol: "ARBITRUM", icon: "🔵" }
@@ -55,8 +53,10 @@ const BlockchainTicker = () => {
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border bg-card/50">
-      <div className="container mx-auto px-6 py-12">
+    <footer className="border-t border-border bg-card/50 relative overflow-hidden blockchain-grid">
+      <div className="absolute inset-0 blockchain-grid opacity-5"></div>
+      
+      <div className="container mx-auto px-6 py-12 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -66,13 +66,13 @@ export default function Footer() {
           >
             <div className="flex items-center space-x-2 mb-6">
               <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
-                <Link className="text-white text-sm" />
+                <Wallet className="text-white text-sm" />
               </div>
               <span className="text-xl font-bold gradient-text">SmartPay</span>
             </div>
             <p className="text-muted-foreground mb-6" data-testid="text-footer-description">
-              The future of freelancing is here. Powered by blockchain, secured by smart contracts, 
-              trusted by thousands.
+              Decentralized freelance platform built for MindSprint 48 Hour Hackathon. Powered by 
+              blockchain, secured by smart contracts.
             </p>
             <div className="flex space-x-4">
               <SocialLink 
@@ -105,8 +105,8 @@ export default function Footer() {
             viewport={{ once: true }}
           >
             <FooterSection
-              title="Platform"
-              links={["How It Works", "Smart Contracts", "Security", "Pricing"]}
+              title="Project"
+              links={["GitHub Repo", "Documentation", "Demo Video", "Whitepaper"]}
             />
           </motion.div>
 
@@ -117,8 +117,8 @@ export default function Footer() {
             viewport={{ once: true }}
           >
             <FooterSection
-              title="Resources"
-              links={["Documentation", "API Reference", "Help Center", "Community"]}
+              title="Hackathon"
+              links={["Pitch Deck", "Smart Contracts", "API Reference", "Team"]}
             />
           </motion.div>
 
@@ -129,8 +129,8 @@ export default function Footer() {
             viewport={{ once: true }}
           >
             <FooterSection
-              title="Company"
-              links={["About Us", "Careers", "Privacy Policy", "Terms of Service"]}
+              title="Resources"
+              links={["How It Works", "Technology Stack", "Future Roadmap", "Contact"]}
             />
           </motion.div>
         </div>
@@ -140,10 +140,13 @@ export default function Footer() {
 
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-muted-foreground text-sm" data-testid="text-copyright">
-              © 2024 SmartPay. All rights reserved. Built on the blockchain for the future of work.
+              © 2025 SmartPay. Built for MindSprint 48 Hour Hackathon by Unstop.
+            </p>
+            <p className="text-muted-foreground text-xs mt-2 md:mt-0">
+              This project was developed for MindSprint Hackathon 2025
             </p>
             <div className="flex items-center space-x-4 mt-4 md:mt-0">
-              <span className="text-sm text-muted-foreground">Powered by</span>
+              <span className="text-sm text-muted-foreground">Powered by Team Galcogens</span>
               <div className="flex space-x-2">
                 <div className="w-6 h-6 bg-primary rounded opacity-80"></div>
                 <div className="w-6 h-6 bg-secondary rounded opacity-80"></div>
