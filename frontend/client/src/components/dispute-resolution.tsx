@@ -37,7 +37,7 @@ export default function DisputeResolution() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "-100px" }}
         >
           <h2 className="text-5xl font-bold gradient-text mb-6" data-testid="text-dispute-title">
             Bulletproof Dispute Resolution

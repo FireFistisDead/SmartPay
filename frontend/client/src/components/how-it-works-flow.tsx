@@ -6,25 +6,25 @@ const steps = [
     icon: <PlusCircle className="h-8 w-8" />,
     title: "Client Posts Project",
     description: "Client creates a project with detailed requirements and milestone-based payment structure",
-    color: "from-blue-500 to-cyan-500"
+    color: "from-slate-600 to-slate-700"
   },
   {
     icon: <Lock className="h-8 w-8" />,
     title: "Funds Secured in Escrow",
     description: "Smart contract locks the agreed payment amount, ensuring funds are available for release",
-    color: "from-purple-500 to-pink-500"
+    color: "from-slate-700 to-slate-800"
   },
   {
     icon: <FileCheck className="h-8 w-8" />,
     title: "Freelancer Submits Work",
     description: "Completed deliverables are submitted and verified against predefined milestone criteria",
-    color: "from-green-500 to-emerald-500"
+    color: "from-slate-600 to-slate-700"
   },
   {
     icon: <CreditCard className="h-8 w-8" />,
     title: "Automatic Payment",
     description: "Smart contract automatically releases payment once milestone conditions are met",
-    color: "from-orange-500 to-red-500"
+    color: "from-slate-700 to-slate-800"
   }
 ];
 
@@ -39,7 +39,7 @@ export default function HowItWorks() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "-100px" }}
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4 gradient-text">
             How It Works
@@ -57,7 +57,7 @@ export default function HowItWorks() {
               initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: index * 0.2 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: "-50px" }}
             >
               <div className={`flex-shrink-0 w-16 h-16 bg-gradient-to-r ${step.color} rounded-xl flex items-center justify-center text-white mr-6`}>
                 {step.icon}
@@ -93,7 +93,7 @@ export default function HowItWorks() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "-100px" }}
         >
           <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-full border border-primary/20">
             <span className="text-sm font-medium">⚡ Average processing time: 2-5 minutes</span>
