@@ -53,7 +53,7 @@ export default function BenefitsSection() {
           viewport={{ once: true }}
         >
           <h2 className="text-5xl font-bold gradient-text mb-6" data-testid="text-benefits-title">
-            Why Choose ChainWork
+            Why Choose SmartyPay
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto" data-testid="text-benefits-subtitle">
             Experience the benefits of blockchain-powered freelancing that puts trust, transparency, 

@@ -60,7 +60,7 @@ export default function ProblemSolution() {
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto" data-testid="text-problem-subtitle">
             From payment delays to trust issues, the current freelance ecosystem is broken. 
-            ChainWork fixes these fundamental problems with blockchain technology.
+            SmartyPay fixes these fundamental problems with blockchain technology.
           </p>
         </motion.div>
 
@@ -103,7 +103,7 @@ export default function ProblemSolution() {
           {/* Solutions */}
           <div className="space-y-8">
             <h3 className="text-3xl font-bold text-green-400 mb-8" data-testid="text-solutions-heading">
-              ChainWork Solutions
+              SmartyPay Solutions
             </h3>
             
             <SolutionCard
