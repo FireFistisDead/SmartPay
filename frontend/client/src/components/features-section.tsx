@@ -6,28 +6,28 @@ const features = [
     icon: <Coins className="h-8 w-8" />,
     title: "Milestone Payments",
     description: "Break down projects into milestones with automatic payment release upon completion. Reduces risk for both parties.",
-    color: "from-blue-500 to-cyan-500",
+    color: "from-slate-600 to-slate-700",
     benefits: ["Reduced project risk", "Better cash flow", "Clear progress tracking"]
   },
   {
     icon: <Shield className="h-8 w-8" />,
     title: "Escrow Security",
     description: "Smart contracts hold funds securely until work is completed and verified. No more payment disputes.",
-    color: "from-green-500 to-emerald-500",
+    color: "from-slate-700 to-slate-800",
     benefits: ["Guaranteed payments", "Fraud protection", "Trust building"]
   },
   {
     icon: <Scale className="h-8 w-8" />,
     title: "Dispute Handling",
     description: "Automated dispute resolution through smart contract logic and optional human arbitration.",
-    color: "from-purple-500 to-pink-500",
+    color: "from-slate-600 to-slate-700",
     benefits: ["Fair resolution", "Quick processing", "Cost effective"]
   },
   {
     icon: <Eye className="h-8 w-8" />,
     title: "Blockchain Transparency",
     description: "All transactions, payments, and project progress are recorded on-chain for complete transparency.",
-    color: "from-orange-500 to-red-500",
+    color: "from-slate-700 to-slate-800",
     benefits: ["Full transparency", "Immutable records", "Audit trail"]
   }
 ];
@@ -42,8 +42,8 @@ export default function FeaturesSection() {
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          viewport={{ once: true, margin: "-100px" }}
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4 gradient-text">
             Core Features
@@ -60,8 +60,8 @@ export default function FeaturesSection() {
               className="group p-8 rounded-2xl glass-morphism border border-border/50 hover:border-primary/30 transition-all duration-500 relative overflow-hidden"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: index * 0.2 }}
-              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: index * 0.2, ease: "easeOut" }}
+              viewport={{ once: true, margin: "-50px" }}
               whileHover={{ scale: 1.02, y: -5 }}
             >
               {/* Background gradient on hover */}
@@ -88,7 +88,7 @@ export default function FeaturesSection() {
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: (index * 0.2) + (idx * 0.1) }}
-                      viewport={{ once: true }}
+                      viewport={{ once: true, margin: "-30px" }}
                     >
                       <div className={`w-2 h-2 bg-gradient-to-r ${feature.color} rounded-full mr-3`}></div>
                       <span className="text-muted-foreground">{benefit}</span>
@@ -105,7 +105,7 @@ export default function FeaturesSection() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "-100px" }}
         >
           <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-full">
             <span className="text-sm font-medium">🔒 All features secured by smart contracts</span>

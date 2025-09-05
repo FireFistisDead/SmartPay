@@ -58,25 +58,26 @@ export default function HeroSection() {
       <div className="container mx-auto px-6 text-center z-10">
         <div className="max-w-5xl mx-auto">
           <motion.h1 
-            className="text-5xl md:text-7xl font-bold mb-7"
+            className="text-4xl md:text-6xl lg:text-7xl font-bold mb-8 leading-tight tracking-tight"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             data-testid="text-hero-title"
           >
-            <span className="gradient-text">Decentralized Freelance.</span><br />
-            <span className="gradient-text">Automated Payments.</span><br />
-            <span className="gradient-text">Total Trust.</span>
+            <span className="gradient-text block">Decentralized Freelance.</span>
+            <span className="gradient-text block">Automated Payments.</span>
+            <span className="gradient-text block">Total Trust.</span>
           </motion.h1>
           
           <motion.p 
-            className="text-xl md:text-2xl text-muted-foreground mb-9 max-w-4xl mx-auto"
+            className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-12 max-w-4xl mx-auto leading-relaxed font-light"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             data-testid="text-hero-subtitle"
           >
-            A blockchain-powered platform built for MindSprint 48 Hour Hackathon that automates milestone-based payments through smart contracts, eliminating disputes and ensuring trust between clients and freelancers.
+            A blockchain-powered platform that automates milestone-based payments through smart contracts, 
+            eliminating disputes and ensuring trust between clients and freelancers.
           </motion.p>
 
           <motion.div 

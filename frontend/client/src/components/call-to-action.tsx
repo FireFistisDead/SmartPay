@@ -26,7 +26,7 @@ export default function CallToAction() {
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "-100px" }}
         >
           <h2 className="text-6xl md:text-7xl font-bold gradient-text mb-8" data-testid="text-cta-title">
             Ready to Experience the Future?
@@ -41,7 +41,7 @@ export default function CallToAction() {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "-50px" }}
           >
             <Button 
               size="lg" 
