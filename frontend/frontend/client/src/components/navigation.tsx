@@ -23,21 +23,16 @@ export default function Navigation() {
     <motion.nav 
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className="fixed top-0 w-full z-50 glass-morphism backdrop-blur-xl border-b border-white/10"
+      className="fixed top-0 w-full z-50 glass-morphism"
     >
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <motion.div 
-            className="flex items-center space-x-2"
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 400, damping: 10 }}
-          >
-            <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center shadow-lg">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
               <Wallet className="text-white text-sm" />
             </div>
             <span className="text-xl font-bold gradient-text">SmartPay</span>
-          </motion.div>
+          </div>
           
           <div className="hidden md:flex items-center space-x-8">
             <button

@@ -69,21 +69,21 @@ export default function CallToAction() {
             transition={{ duration: 0.8, delay: 0.4 }}
             viewport={{ once: true }}
           >
-            {[0, 1, 2].map((index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 + index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <FeatureHighlight
-                  icon={index === 0 ? <Clock className="text-white text-2xl" /> : index === 1 ? <Shield className="text-white text-2xl" /> : <Handshake className="text-white text-2xl" />}
-                  title={index === 0 ? "Launch in Minutes" : index === 1 ? "100% Secure" : "Guaranteed Trust"}
-                  description={index === 0 ? "Connect your wallet and start your first project immediately" : index === 1 ? "Your funds are protected by audited smart contracts" : "Blockchain-verified reputation and automatic payments"}
-                />
-              </motion.div>
-            ))}
+            <FeatureHighlight
+              icon={<Clock className="text-white text-2xl" />}
+              title="Launch in Minutes"
+              description="Connect your wallet and start your first project immediately"
+            />
+            <FeatureHighlight
+              icon={<Shield className="text-white text-2xl" />}
+              title="100% Secure"
+              description="Your funds are protected by audited smart contracts"
+            />
+            <FeatureHighlight
+              icon={<Handshake className="text-white text-2xl" />}
+              title="Guaranteed Trust"
+              description="Blockchain-verified reputation and automatic payments"
+            />
           </motion.div>
         </motion.div>
       </div>

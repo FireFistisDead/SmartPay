@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useParallax } from "@/hooks/use-parallax";
 import { Button } from "@/components/ui/button";
 import { UserCheck, Laptop } from "lucide-react";
+import ParticleBackground from "./particle-background";
 
 const FloatingIcon = ({ icon, className, delay = 0 }: { icon: React.ReactNode; className: string; delay?: number }) => (
   <motion.div
@@ -26,8 +27,9 @@ export default function HeroSection() {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden blockchain-grid pt-20" ref={ref}>
+      <ParticleBackground />
       {/* Floating Icons */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 z-10">
         <FloatingIcon 
           icon={<span className="text-primary">Ξ</span>} 
           className="top-20 left-10" 
@@ -55,7 +57,7 @@ export default function HeroSection() {
         />
       </div>
 
-      <div className="container mx-auto px-6 text-center z-10">
+      <div className="container mx-auto px-6 text-center z-20">
         <div className="max-w-5xl mx-auto">
           <motion.h1 
             className="text-5xl md:text-7xl font-bold mb-7"
@@ -87,7 +89,7 @@ export default function HeroSection() {
           >
             <Button 
               size="lg" 
-              className="px-7 py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-xl text-lg font-semibold hover:scale-105 transition-transform animate-glow"
+              className="px-7 py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-xl text-lg font-semibold hover:scale-105 transition-all duration-300 animate-glow shadow-lg hover:shadow-xl"
               data-testid="button-hire-talent"
             >
               <UserCheck className="mr-2" />
@@ -96,7 +98,7 @@ export default function HeroSection() {
             <Button 
               size="lg" 
               variant="outline" 
-              className="px-7 py-4 glass-morphism text-foreground rounded-xl text-lg font-semibold hover:scale-105 transition-transform"
+              className="px-7 py-4 glass-morphism text-foreground rounded-xl text-lg font-semibold hover:scale-105 transition-all duration-300 hover:bg-primary/10 border-primary/50"
               data-testid="button-work-freelancer"
             >
               <Laptop className="mr-2" />
