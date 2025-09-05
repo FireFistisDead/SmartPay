@@ -60,7 +60,7 @@ export default function HowItWorks() {
           viewport={{ once: true }}
         >
           <h2 className="text-5xl font-bold gradient-text mb-6" data-testid="text-how-it-works-title">
-            How ChainWork Works
+            How SmartyPay Works
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto" data-testid="text-how-it-works-subtitle">
             Experience the future of freelancing with our automated, blockchain-powered workflow that ensures 

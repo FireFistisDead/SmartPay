@@ -68,7 +68,7 @@ export default function Footer() {
               <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
                 <Link className="text-white text-sm" />
               </div>
-              <span className="text-xl font-bold gradient-text">ChainWork</span>
+              <span className="text-xl font-bold gradient-text">SmartyPay</span>
             </div>
             <p className="text-muted-foreground mb-6" data-testid="text-footer-description">
               The future of freelancing is here. Powered by blockchain, secured by smart contracts, 
@@ -140,7 +140,7 @@ export default function Footer() {
 
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-muted-foreground text-sm" data-testid="text-copyright">
-              © 2024 ChainWork. All rights reserved. Built on the blockchain for the future of work.
+              © 2024 SmartyPay. All rights reserved. Built on the blockchain for the future of work.
             </p>
             <div className="flex items-center space-x-4 mt-4 md:mt-0">
               <span className="text-sm text-muted-foreground">Powered by</span>

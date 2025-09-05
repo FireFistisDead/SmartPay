@@ -1,6 +1,6 @@
 # Overview
 
-This is a modern React web application for a decentralized freelance work platform that automates milestone-based payments using blockchain smart contracts. The platform connects clients and freelancers through a trustless system that handles escrow payments, project milestones, and automated fund releases using blockchain technology.
+This is SmartyPay, a modern React web application for a decentralized freelance work platform that automates milestone-based payments using blockchain smart contracts. The platform connects clients and freelancers through a trustless system that handles escrow payments, project milestones, and automated fund releases using blockchain technology.
 
 The application features a futuristic design with blockchain-inspired visuals, glassmorphism effects, and animated user interfaces. It showcases the platform's key benefits including automated payments, dispute resolution, and decentralized trust mechanisms through an engaging marketing website.
 
