@@ -234,7 +234,7 @@ export default function BrowseProjects() {
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6 py-8 pt-24">
         {/* Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

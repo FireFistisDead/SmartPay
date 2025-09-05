@@ -95,7 +95,7 @@ export default function CreateProject() {
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6 py-8 pt-24">
         <div className="max-w-4xl mx-auto">
           {/* Progress Steps */}
           <div className="mb-8">

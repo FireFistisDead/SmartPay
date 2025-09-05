@@ -25,7 +25,7 @@ export default function HeroSection() {
   const { ref } = useParallax(0.5);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden blockchain-grid" ref={ref}>
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden blockchain-grid pt-20" ref={ref}>
       {/* Floating Icons */}
       <div className="absolute inset-0">
         <FloatingIcon 

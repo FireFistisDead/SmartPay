@@ -46,7 +46,7 @@ export default function ProblemSolution() {
   const { ref } = useScrollAnimation();
 
   return (
-    <section id="problem-solution" className="py-24" ref={ref}>
+    <section id="problem-solution" className="py-24 pt-32" ref={ref}>
       <div className="container mx-auto px-6">
         <motion.div 
           className="text-center mb-20"
