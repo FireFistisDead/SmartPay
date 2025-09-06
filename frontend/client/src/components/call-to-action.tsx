@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useLocation } from "wouter";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 import { Rocket, PlayCircle, Clock, Shield, Handshake } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,12 @@ const FeatureHighlight = ({ icon, title, description }: { icon: React.ReactNode;
 );
 
 export default function CallToAction() {
+  const [, setLocation] = useLocation();
   const { ref } = useScrollAnimation();
+
+  const handleGetStarted = () => {
+    setLocation("/login");
+  };
 
   return (
     <section className="py-24 relative overflow-hidden blockchain-grid" ref={ref}>
@@ -47,6 +53,7 @@ export default function CallToAction() {
               size="lg" 
               className="px-12 py-6 bg-gradient-to-r from-primary to-secondary text-white rounded-xl text-xl font-semibold hover:scale-105 transition-transform animate-glow"
               data-testid="button-get-started"
+              onClick={handleGetStarted}
             >
               <Rocket className="mr-3" />
               Get Started on Blockchain Freelancing
