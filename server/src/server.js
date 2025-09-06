@@ -10,9 +10,19 @@ require('dotenv').config();
 
 const config = require('./config/config');
 const connectDB = require('./config/database');
+const redisClient = require('./config/redis');
 const logger = require('./utils/logger');
 const { errorHandler } = require('./middleware/errorHandler');
 const BlockchainEventListener = require('./services/blockchainEventListener');
+const WebSocketService = require('./services/webSocketService');
+const SecurityService = require('./services/securityService');
+
+// Phase 5 services
+const AdvancedErrorHandlingService = require('./services/advancedErrorHandlingService');
+const ComprehensiveMonitoringService = require('./services/comprehensiveMonitoringService');
+const RealTimeAlertingService = require('./services/realTimeAlertingService');
+const PerformanceAnalyticsService = require('./services/performanceAnalyticsService');
+const OperationalDashboardService = require('./services/operationalDashboardService');
 
 // Import routes
 const jobRoutes = require('./routes/jobRoutes');
@@ -21,6 +31,10 @@ const ipfsRoutes = require('./routes/ipfsRoutes');
 const disputeRoutes = require('./routes/disputeRoutes');
 const userRoutes = require('./routes/userRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const advancedRoutes = require('./routes/advancedRoutes');
+const phase4Routes = require('./routes/phase4Routes');
+const phase5Routes = require('./routes/phase5Routes');
 
 class Server {
   constructor() {
@@ -33,6 +47,18 @@ class Server {
       }
     });
     this.port = config.port;
+    
+    // Initialize advanced services
+    this.webSocketService = new WebSocketService();
+    this.securityService = new SecurityService();
+    
+    // Initialize Phase 5 services
+    this.errorHandlingService = new AdvancedErrorHandlingService();
+    this.monitoringService = new ComprehensiveMonitoringService();
+    this.alertingService = new RealTimeAlertingService();
+    this.performanceService = new PerformanceAnalyticsService();
+    this.dashboardService = new OperationalDashboardService();
+    
     this.setupMiddleware();
     this.setupRoutes();
     this.setupErrorHandling();
@@ -40,22 +66,22 @@ class Server {
   }
 
   setupMiddleware() {
-    // Security middleware
-    this.app.use(helmet());
+    // Apply advanced security middleware
+    this.app.use(...this.securityService.getSecurityMiddleware());
+    
+    // CORS
     this.app.use(cors({
       origin: process.env.FRONTEND_URL || "http://localhost:3000",
       credentials: true
     }));
 
-    // Rate limiting
-    const limiter = rateLimit({
+    // Enhanced rate limiting with security service
+    const advancedLimiter = this.securityService.createRateLimit({
       windowMs: config.rateLimitWindowMs,
       max: config.rateLimitMaxRequests,
-      message: 'Too many requests from this IP, please try again later.',
-      standardHeaders: true,
-      legacyHeaders: false,
+      message: 'Too many requests from this IP, please try again later.'
     });
-    this.app.use('/api/', limiter);
+    this.app.use('/api/', advancedLimiter);
 
     // Body parsing and compression
     this.app.use(compression());
@@ -73,7 +99,11 @@ class Server {
         status: 'OK',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV,
-        uptime: process.uptime()
+        uptime: process.uptime(),
+        services: {
+          websocket: this.webSocketService.initialized,
+          security: true
+        }
       });
     });
   }
@@ -86,6 +116,10 @@ class Server {
     this.app.use('/api/disputes', disputeRoutes);
     this.app.use('/api/users', userRoutes);
     this.app.use('/api/analytics', analyticsRoutes);
+    this.app.use('/api/payments', paymentRoutes);
+    this.app.use('/api/advanced', advancedRoutes);
+    this.app.use('/api/phase4', phase4Routes);
+    this.app.use('/api/phase5', phase5Routes);
 
     // 404 handler
     this.app.use('*', (req, res) => {
@@ -117,26 +151,55 @@ class Server {
   }
 
   setupSocketIO() {
-    this.io.on('connection', (socket) => {
-      logger.info(`Client connected: ${socket.id}`);
+    // Initialize advanced WebSocket service
+    this.webSocketService.initialize(this.server);
+    
+    // Make WebSocket service available globally
+    global.webSocketService = this.webSocketService;
+    
+    logger.info('Advanced WebSocket service configured');
+  }
 
-      socket.on('disconnect', () => {
-        logger.info(`Client disconnected: ${socket.id}`);
+  async initializePhase5Services() {
+    try {
+      // Initialize error handling service
+      await this.errorHandlingService.initialize();
+      
+      // Initialize monitoring service
+      await this.monitoringService.initialize();
+      
+      // Initialize alerting service
+      await this.alertingService.initialize();
+      
+      // Initialize performance analytics service
+      await this.performanceService.initialize();
+      
+      // Initialize dashboard service with all other services
+      await this.dashboardService.initialize({
+        errorHandlingService: this.errorHandlingService,
+        monitoringService: this.monitoringService,
+        alertingService: this.alertingService,
+        performanceService: this.performanceService
       });
 
-      socket.on('joinJob', (jobId) => {
-        socket.join(`job_${jobId}`);
-        logger.info(`Socket ${socket.id} joined job room: job_${jobId}`);
-      });
+      // Make services available globally for controllers
+      global.phase5Services = {
+        errorHandling: this.errorHandlingService,
+        monitoring: this.monitoringService,
+        alerting: this.alertingService,
+        performance: this.performanceService,
+        dashboard: this.dashboardService
+      };
 
-      socket.on('leaveJob', (jobId) => {
-        socket.leave(`job_${jobId}`);
-        logger.info(`Socket ${socket.id} left job room: job_${jobId}`);
-      });
-    });
+      // Start monitoring processes
+      this.monitoringService.startMonitoring();
+      this.performanceService.startAnalytics();
 
-    // Make io available globally
-    global.io = this.io;
+      logger.info('All Phase 5 services initialized and running');
+    } catch (error) {
+      logger.error('Failed to initialize Phase 5 services:', error);
+      throw error;
+    }
   }
 
   async start() {
@@ -145,15 +208,24 @@ class Server {
       await connectDB();
       logger.info('Database connected successfully');
 
+      // Connect to Redis
+      await redisClient.connect();
+      logger.info('Redis connected successfully');
+
       // Start blockchain event listener
       const eventListener = new BlockchainEventListener();
       await eventListener.start();
       logger.info('Blockchain event listener started');
 
+      // Initialize Phase 5 services
+      await this.initializePhase5Services();
+      logger.info('Phase 5 services initialized successfully');
+
       // Start server
       this.server.listen(this.port, () => {
         logger.info(`Server is running on port ${this.port} in ${process.env.NODE_ENV} mode`);
         logger.info(`Health check available at http://localhost:${this.port}/health`);
+        logger.info(`Phase 5 monitoring dashboard available at http://localhost:${this.port}/api/phase5/dashboard`);
       });
 
     } catch (error) {
@@ -165,7 +237,7 @@ class Server {
   async gracefulShutdown() {
     logger.info('Graceful shutdown initiated...');
     
-    this.server.close(() => {
+    this.server.close(async () => {
       logger.info('HTTP server closed');
       
       // Close database connections
@@ -175,8 +247,8 @@ class Server {
       }
 
       // Close Redis connection
-      if (global.redis) {
-        global.redis.quit();
+      if (redisClient && redisClient.isConnected) {
+        await redisClient.disconnect();
         logger.info('Redis connection closed');
       }
 

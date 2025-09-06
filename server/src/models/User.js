@@ -88,9 +88,45 @@ const userSchema = new mongoose.Schema({
   // User Roles and Capabilities
   roles: [{
     type: String,
-    enum: ['freelancer', 'client', 'arbiter'],
-    default: 'client'
+    enum: ['guest', 'user', 'freelancer', 'client', 'moderator', 'admin', 'super_admin'],
+    default: 'user'
   }],
+  
+  // RBAC and Security
+  permissions: [{
+    type: String,
+    trim: true
+  }],
+  
+  // Security tracking
+  securityProfile: {
+    lastLogin: Date,
+    loginAttempts: {
+      type: Number,
+      default: 0
+    },
+    accountLocked: {
+      type: Boolean,
+      default: false
+    },
+    lockedUntil: Date,
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false
+    },
+    twoFactorSecret: String,
+    sessionTokens: [{
+      token: String,
+      createdAt: Date,
+      expiresAt: Date,
+      deviceFingerprint: String
+    }],
+    passwordChangedAt: Date,
+    securityQuestions: [{
+      question: String,
+      answerHash: String
+    }]
+  },
   
   // Freelancer-specific data
   freelancerProfile: {

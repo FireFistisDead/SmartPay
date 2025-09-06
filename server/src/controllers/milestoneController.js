@@ -1,5 +1,6 @@
 const Job = require('../models/Job');
 const IPFSService = require('../services/ipfsService');
+const ContractService = require('../services/contractService');
 const logger = require('../utils/logger');
 const { AppError } = require('../middleware/errorHandler');
 const { ValidationUtils } = require('../utils/helpers');
@@ -7,6 +8,7 @@ const { ValidationUtils } = require('../utils/helpers');
 class MilestoneController {
   constructor() {
     this.ipfsService = new IPFSService();
+    this.contractService = new ContractService();
   }
 
   /**
@@ -104,22 +106,63 @@ class MilestoneController {
         // Continue anyway - the hash might be valid but not in our cache
       }
 
-      // This should trigger a blockchain transaction
-      // For now, just return instructions
-      res.status(200).json({
-        message: 'Milestone submission prepared',
-        instructions: {
-          1: 'Call the submitMilestone function on the smart contract',
-          2: 'Pass the jobId, milestoneIndex, and deliverableHash as parameters',
-          3: 'The backend will process the blockchain event and update the milestone'
-        },
-        transactionData: {
+      logger.info(`Submitting milestone ${index} for job ${jobId}:`, {
+        freelancer: req.user.address,
+        deliverableHash,
+        notes
+      });
+
+      // Send transaction to blockchain
+      try {
+        const blockchainResult = await this.contractService.submitMilestone(
+          job.jobId,
+          index,
+          deliverableHash
+        );
+
+        logger.info('Milestone submitted to blockchain successfully:', {
+          jobId: job.jobId,
+          milestoneIndex: index,
+          transactionHash: blockchainResult.transactionHash
+        });
+
+        res.status(200).json({
+          success: true,
+          message: 'Milestone submission transaction sent to blockchain',
           jobId: parseInt(jobId),
           milestoneIndex: index,
           deliverableHash,
+          transactionHash: blockchainResult.transactionHash,
+          blockNumber: blockchainResult.blockNumber,
+          status: 'pending_confirmation',
           notes: notes || null
+        });
+
+      } catch (blockchainError) {
+        logger.error('Blockchain transaction failed:', blockchainError);
+        
+        // For development/testing, allow fallback to database-only update
+        if (process.env.NODE_ENV === 'development' && blockchainError.code === 'BLOCKCHAIN_INIT_ERROR') {
+          logger.warn('Falling back to database-only milestone submission for development');
+          
+          // Update milestone in database
+          milestone.deliverableHash = deliverableHash;
+          milestone.notes = notes || milestone.notes;
+          milestone.status = 'submitted';
+          milestone.submittedAt = new Date();
+          
+          await job.save();
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Milestone submitted (development mode - no blockchain)',
+            milestone: milestone.toObject(),
+            warning: 'This update exists only in the database. Deploy smart contract for full functionality.'
+          });
         }
-      });
+        
+        throw blockchainError;
+      }
 
     } catch (error) {
       logger.error('Error submitting milestone:', error);
@@ -149,22 +192,61 @@ class MilestoneController {
         throw new AppError('Cannot approve this milestone', 403, 'MILESTONE_NOT_APPROVABLE');
       }
 
-      // This should trigger a blockchain transaction
-      // For now, just return instructions
-      res.status(200).json({
-        message: 'Milestone approval prepared',
-        instructions: {
-          1: 'Call the approveMilestone function on the smart contract',
-          2: 'Pass the jobId and milestoneIndex as parameters',
-          3: 'The backend will process the blockchain event and release the payment'
-        },
-        transactionData: {
+      logger.info(`Approving milestone ${index} for job ${jobId}:`, {
+        client: req.user.address,
+        amount: milestone.amount,
+        notes
+      });
+
+      // Send transaction to blockchain
+      try {
+        const blockchainResult = await this.contractService.approveMilestone(
+          job.jobId,
+          index
+        );
+
+        logger.info('Milestone approved on blockchain successfully:', {
+          jobId: job.jobId,
+          milestoneIndex: index,
+          transactionHash: blockchainResult.transactionHash
+        });
+
+        res.status(200).json({
+          success: true,
+          message: 'Milestone approval transaction sent to blockchain',
           jobId: parseInt(jobId),
           milestoneIndex: index,
           amount: milestone.amount,
+          transactionHash: blockchainResult.transactionHash,
+          blockNumber: blockchainResult.blockNumber,
+          status: 'pending_confirmation',
           notes: notes || null
+        });
+
+      } catch (blockchainError) {
+        logger.error('Blockchain transaction failed:', blockchainError);
+        
+        // For development/testing, allow fallback to database-only update
+        if (process.env.NODE_ENV === 'development' && blockchainError.code === 'BLOCKCHAIN_INIT_ERROR') {
+          logger.warn('Falling back to database-only milestone approval for development');
+          
+          // Update milestone in database
+          milestone.status = 'approved';
+          milestone.approvedAt = new Date();
+          milestone.notes = notes || milestone.notes;
+          
+          await job.save();
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Milestone approved (development mode - no blockchain)',
+            milestone: milestone.toObject(),
+            warning: 'This update exists only in the database. Deploy smart contract for full functionality.'
+          });
         }
-      });
+        
+        throw blockchainError;
+      }
 
     } catch (error) {
       logger.error('Error approving milestone:', error);
