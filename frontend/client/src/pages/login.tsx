@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wallet, Users, Briefcase, ArrowRight, Home } from "lucide-react";
-import ParticleBackground from "@/components/particle-background";
+import { Wallet, Users, Briefcase, ArrowRight, Home, Mail } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const FloatingIcon = ({ icon, className, delay = 0 }: { icon: React.ReactNode; className: string; delay?: number }) => (
   <motion.div
@@ -33,6 +34,13 @@ export default function Login() {
   const [activeTab, setActiveTab] = useState("role");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSignup, setIsSignup] = useState(false);
+  const [username, setUsername] = useState("");
+
+  const { login, signup, loginWithGoogle } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     // Check for role parameter in URL
@@ -41,41 +49,93 @@ export default function Login() {
     
     if (roleParam === 'client' || roleParam === 'freelancer') {
       setSelectedRole(roleParam);
-      setActiveTab("wallet"); // Automatically switch to wallet tab
+      setActiveTab("auth"); // Automatically switch to auth tab
     }
   }, []);
 
-  const handleLogin = (role: "client" | "freelancer") => {
+  const handleEmailAuth = async () => {
+    if (!selectedRole) {
+      setErrorMessage("Please select a role first");
+      return;
+    }
+
+    if (!email || !password) {
+      setErrorMessage("Please fill in all fields");
+      return;
+    }
+
+    if (isSignup && !username) {
+      setErrorMessage("Please enter a username");
+      return;
+    }
+
     setIsLoading(true);
-    // Simulate a brief loading state for better UX
-    setTimeout(() => {
-      // For now, just redirect to dashboard
-      // In production, this would handle SmartPay connection and authentication
-      localStorage.setItem("userRole", role);
+    setErrorMessage("");
+
+    try {
+      if (isSignup) {
+        await signup(email, password, username, selectedRole);
+        toast({
+          title: "Account Created!",
+          description: "Please check your email for verification before logging in.",
+        });
+        setIsSignup(false);
+      } else {
+        await login(email, password, selectedRole);
+        toast({
+          title: "Login Successful!",
+          description: `Welcome back, ${selectedRole}!`,
+        });
+        setLocation("/dashboard");
+      }
+    } catch (error: any) {
+      setErrorMessage(error.message || "Authentication failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    if (!selectedRole) {
+      setErrorMessage("Please select a role first");
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage("");
+
+    try {
+      await loginWithGoogle(selectedRole);
+      toast({
+        title: "Login Successful!",
+        description: `Welcome, ${selectedRole}!`,
+      });
       setLocation("/dashboard");
-    }, 1000);
+    } catch (error: any) {
+      setErrorMessage(error.message || "Google authentication failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleTabChange = (newTab: string) => {
-    if (newTab === "wallet" && !selectedRole) {
+    if (newTab === "auth" && !selectedRole) {
       setErrorMessage("Choose a Role to login/register");
-      // Clear error message after 3 seconds
       setTimeout(() => setErrorMessage(""), 3000);
       return;
     }
-    setErrorMessage(""); // Clear any existing error
+    setErrorMessage("");
     setActiveTab(newTab);
   };
 
   const handleRoleSelection = (role: "client" | "freelancer") => {
     setSelectedRole(role);
-    setErrorMessage(""); // Clear any error when role is selected
+    setErrorMessage("");
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 blockchain-grid opacity-10"></div>
-      <ParticleBackground />
       
       {/* Back to Home Button */}
       <motion.div
@@ -168,7 +228,7 @@ export default function Login() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
-            Connect your SmartPay and choose your role to get started
+            Connect with blockchain-powered freelancing
           </motion.p>
         </div>
 
@@ -176,7 +236,7 @@ export default function Login() {
           <CardHeader className="pb-4 pt-6">
             <CardTitle className="text-lg">Login / Sign Up</CardTitle>
             <CardDescription className="text-sm">
-              Choose your role and connect to start earning or hiring
+              Choose your role and authenticate to get started
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0 pb-6">
@@ -193,7 +253,7 @@ export default function Login() {
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-4">
                 <TabsTrigger value="role" data-testid="tab-role" className="text-sm">Choose Role</TabsTrigger>
-                <TabsTrigger value="wallet" data-testid="tab-wallet" className="text-sm">Connect SmartPay</TabsTrigger>
+                <TabsTrigger value="auth" data-testid="tab-auth" className="text-sm">Authenticate</TabsTrigger>
               </TabsList>
               
               <TabsContent value="role" className="space-y-3">
@@ -267,18 +327,37 @@ export default function Login() {
                     className="mt-4"
                   >
                     <Button
-                      onClick={() => setActiveTab("wallet")}
+                      onClick={() => setActiveTab("auth")}
                       className="w-full py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-lg text-sm font-semibold hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
                     >
-                      Continue to Connect SmartPay
+                      Continue to Authentication
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
                   </motion.div>
                 )}
               </TabsContent>
               
-              <TabsContent value="wallet" className="space-y-4">
+              <TabsContent value="auth" className="space-y-4">
                 <div className="space-y-3">
+                  {isSignup && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.1 }}
+                    >
+                      <Label htmlFor="username" className="text-sm">Username</Label>
+                      <Input 
+                        id="username" 
+                        type="text" 
+                        placeholder="Enter your username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        data-testid="input-username"
+                        className="mt-1 h-9"
+                      />
+                    </motion.div>
+                  )}
+                  
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -289,10 +368,13 @@ export default function Login() {
                       id="email" 
                       type="email" 
                       placeholder="Enter your email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       data-testid="input-email"
                       className="mt-1 h-9"
                     />
                   </motion.div>
+                  
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -300,17 +382,21 @@ export default function Login() {
                   >
                     <div className="flex items-center justify-between">
                       <Label htmlFor="password" className="text-sm">Password</Label>
-                      <Link 
-                        href="/forgot-password" 
-                        className="text-xs text-primary hover:underline"
-                      >
-                        Forgot password?
-                      </Link>
+                      {!isSignup && (
+                        <Link 
+                          href="/forgot-password" 
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Forgot password?
+                        </Link>
+                      )}
                     </div>
                     <Input 
                       id="password" 
                       type="password" 
                       placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       data-testid="input-password"
                       className="mt-1 h-9"
                     />
@@ -326,21 +412,21 @@ export default function Login() {
                   <Button 
                     className="w-full bg-gradient-to-r from-primary to-secondary h-10 text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                     disabled={!selectedRole || isLoading}
-                    onClick={() => selectedRole && handleLogin(selectedRole)}
-                    data-testid="button-connect-wallet"
+                    onClick={handleEmailAuth}
+                    data-testid="button-email-auth"
                   >
-                    <Wallet className="mr-2 h-4 w-4" />
-                    {isLoading ? "Connecting..." : "Connect SmartPay & Continue"}
+                    <Mail className="mr-2 h-4 w-4" />
+                    {isLoading ? "Processing..." : (isSignup ? "Create Account" : "Login with Email")}
                   </Button>
 
                   <Button 
                     variant="outline" 
                     className="w-full glass-morphism h-10 text-sm font-semibold hover:bg-primary/10 transition-all duration-300 hover:scale-105"
                     disabled={!selectedRole || isLoading}
-                    onClick={() => selectedRole && handleLogin(selectedRole)}
-                    data-testid="button-email-login"
+                    onClick={handleGoogleAuth}
+                    data-testid="button-google-auth"
                   >
-                    {isLoading ? "Processing..." : "Continue with Email"}
+                    {isLoading ? "Processing..." : "Continue with Google"}
                   </Button>
                 </motion.div>
 
@@ -351,10 +437,13 @@ export default function Login() {
                   transition={{ duration: 0.5, delay: 0.8 }}
                 >
                   <p>
-                    Don't have an account?{" "}
-                    <Link href="/signup" className="text-primary hover:underline">
-                      Sign up here
-                    </Link>
+                    {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
+                    <button 
+                      onClick={() => setIsSignup(!isSignup)}
+                      className="text-primary hover:underline"
+                    >
+                      {isSignup ? "Login here" : "Sign up here"}
+                    </button>
                   </p>
                 </motion.div>
               </TabsContent>

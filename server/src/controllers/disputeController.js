@@ -2,9 +2,14 @@ const Job = require('../models/Job');
 const User = require('../models/User');
 const { AppError } = require('../middleware/errorHandler');
 const notificationService = require('../services/notificationService');
+const ContractService = require('../services/contractService');
 const logger = require('../utils/logger');
 
 class DisputeController {
+  constructor() {
+    this.contractService = new ContractService();
+  }
+
   /**
    * Raise a dispute for a job
    */

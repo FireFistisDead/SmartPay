@@ -27,6 +27,57 @@ const config = {
     }
   },
 
+  // Security Configuration
+  security: {
+    encryptionKey: process.env.ENCRYPTION_KEY || '32-byte-encryption-key-here-12345',
+    hashRounds: parseInt(process.env.HASH_ROUNDS) || 12,
+    sessionTimeout: parseInt(process.env.SESSION_TIMEOUT) || 86400000, // 24 hours
+    maxLoginAttempts: parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 5,
+    lockoutDuration: parseInt(process.env.LOCKOUT_DURATION) || 900000, // 15 minutes
+    rateLimiting: {
+      windowMs: parseInt(process.env.RATE_LIMIT_WINDOW) || 900000, // 15 minutes
+      maxRequests: parseInt(process.env.RATE_LIMIT_MAX) || 100,
+      skipSuccessfulRequests: process.env.RATE_LIMIT_SKIP_SUCCESS === 'true',
+    }
+  },
+
+  // WebSocket Configuration
+  websocket: {
+    enabled: process.env.WEBSOCKET_ENABLED !== 'false',
+    maxConnections: parseInt(process.env.WS_MAX_CONNECTIONS) || 1000,
+    heartbeatInterval: parseInt(process.env.WS_HEARTBEAT_INTERVAL) || 30000, // 30 seconds
+    messageRateLimit: parseInt(process.env.WS_MESSAGE_RATE_LIMIT) || 10, // per second
+    roomSizeLimit: parseInt(process.env.WS_ROOM_SIZE_LIMIT) || 100,
+  },
+
+  // Advanced Analytics Configuration
+  analytics: {
+    enabled: process.env.ANALYTICS_ENABLED !== 'false',
+    mlModelsPath: process.env.ML_MODELS_PATH || './models',
+    batchSize: parseInt(process.env.ANALYTICS_BATCH_SIZE) || 1000,
+    retrainingInterval: parseInt(process.env.RETRAINING_INTERVAL) || 86400000, // 24 hours
+    predictionThreshold: parseFloat(process.env.PREDICTION_THRESHOLD) || 0.7,
+    cacheTTL: parseInt(process.env.ANALYTICS_CACHE_TTL) || 3600, // 1 hour
+  },
+
+  // Multi-signature Configuration
+  multisig: {
+    enabled: process.env.MULTISIG_ENABLED !== 'false',
+    defaultThreshold: parseInt(process.env.MULTISIG_THRESHOLD) || 2,
+    proposalExpiry: parseInt(process.env.MULTISIG_PROPOSAL_EXPIRY) || 86400000, // 24 hours
+    maxSigners: parseInt(process.env.MULTISIG_MAX_SIGNERS) || 10,
+    contractAddress: process.env.MULTISIG_CONTRACT_ADDRESS,
+  },
+
+  // Automation Configuration
+  automation: {
+    enabled: process.env.AUTOMATION_ENABLED !== 'false',
+    checkInterval: parseInt(process.env.AUTOMATION_CHECK_INTERVAL) || 300000, // 5 minutes
+    maxRulesPerJob: parseInt(process.env.MAX_AUTOMATION_RULES) || 10,
+    executionTimeout: parseInt(process.env.AUTOMATION_TIMEOUT) || 300000, // 5 minutes
+    retryAttempts: parseInt(process.env.AUTOMATION_RETRY_ATTEMPTS) || 3,
+  },
+
   // Blockchain Configuration
   blockchain: {
     networks: {
@@ -34,22 +85,73 @@ const config = {
         name: 'Polygon Amoy Testnet',
         chainId: 80002,
         rpcUrl: process.env.RPC_URL_POLYGON_AMOY || 'https://rpc-amoy.polygon.technology',
-        blockConfirmations: 3,
-        gasLimit: 3000000,
+        blockConfirmations: parseInt(process.env.BLOCK_CONFIRMATIONS) || 3,
+        gasLimit: parseInt(process.env.GAS_LIMIT) || 3000000,
+        gasPriceGwei: parseInt(process.env.GAS_PRICE_GWEI) || 20,
       },
       polygonMainnet: {
         name: 'Polygon Mainnet',
         chainId: 137,
         rpcUrl: process.env.RPC_URL_POLYGON_MAINNET || 'https://polygon-rpc.com',
-        blockConfirmations: 5,
-        gasLimit: 3000000,
+        blockConfirmations: parseInt(process.env.BLOCK_CONFIRMATIONS) || 5,
+        gasLimit: parseInt(process.env.GAS_LIMIT) || 3000000,
+        gasPriceGwei: parseInt(process.env.GAS_PRICE_GWEI) || 25,
       }
     },
     defaultNetwork: process.env.NODE_ENV === 'production' ? 'polygonMainnet' : 'polygonAmoy',
     privateKey: process.env.PRIVATE_KEY,
     contractAddress: process.env.CONTRACT_ADDRESS,
+    usdcContractAddress: process.env.USDC_CONTRACT_ADDRESS,
+    
+    // Token Configuration
+    tokenAddress: process.env.TOKEN_ADDRESS || process.env.USDC_CONTRACT_ADDRESS,
+    tokenSymbol: process.env.TOKEN_SYMBOL || 'USDC',
+    tokenDecimals: parseInt(process.env.TOKEN_DECIMALS) || 6,
+    
+    // Payment Configuration
+    paymentService: {
+      enabled: process.env.PAYMENT_SERVICE_ENABLED === 'true' || true,
+      maxTransactionAmount: process.env.MAX_TRANSACTION_AMOUNT || '10000', // in token units
+      minTransactionAmount: process.env.MIN_TRANSACTION_AMOUNT || '0.01',
+      escrowFeePercentage: parseFloat(process.env.ESCROW_FEE_PERCENTAGE) || 2.5, // 2.5%
+      gasFeeBuffer: parseFloat(process.env.GAS_FEE_BUFFER) || 1.2, // 20% buffer
+    },
+    
+    // Price Oracle Configuration
+    priceOracle: {
+      enabled: process.env.PRICE_ORACLE_ENABLED === 'true' || true,
+      primaryProvider: process.env.PRICE_ORACLE_PRIMARY || 'coingecko',
+      fallbackProvider: process.env.PRICE_ORACLE_FALLBACK || 'coinbase',
+      cacheDuration: parseInt(process.env.PRICE_CACHE_DURATION) || 300, // 5 minutes
+      apiTimeout: parseInt(process.env.PRICE_API_TIMEOUT) || 10000, // 10 seconds
+      supportedCurrencies: ['USD', 'EUR', 'GBP', 'JPY', 'INR'],
+      supportedTokens: ['ETH', 'MATIC', 'USDC', 'USDT', 'DAI', 'BTC'],
+    },
+    
     eventBatchSize: 1000,
     blockRange: 10000,
+    
+    // Transaction settings
+    maxRetries: 3,
+    retryDelay: 5000, // 5 seconds
+    confirmationTimeout: 300000, // 5 minutes
+  },
+
+  // Monitoring Configuration
+  monitoring: {
+    enabled: process.env.ENABLE_METRICS === 'true',
+    port: parseInt(process.env.METRICS_PORT) || 9090,
+    
+    // External monitoring services (optional)
+    tenderly: {
+      project: process.env.TENDERLY_PROJECT,
+      username: process.env.TENDERLY_USERNAME,
+      accessKey: process.env.TENDERLY_ACCESS_KEY,
+    },
+    sentry: {
+      dsn: process.env.SENTRY_DSN,
+      environment: process.env.NODE_ENV || 'development',
+    }
   },
 
   // IPFS Configuration
@@ -115,31 +217,6 @@ const config = {
       'application/x-zip-compressed'
     ],
     uploadDir: path.join(__dirname, '../../uploads')
-  },
-
-  // External Services
-  external: {
-    tenderly: {
-      accessKey: process.env.TENDERLY_ACCESS_KEY,
-      project: process.env.TENDERLY_PROJECT,
-      username: process.env.TENDERLY_USERNAME
-    },
-    sentry: {
-      dsn: process.env.SENTRY_DSN
-    }
-  },
-
-  // Monitoring
-  monitoring: {
-    enabled: process.env.ENABLE_METRICS === 'true',
-    port: parseInt(process.env.METRICS_PORT) || 9090
-  },
-
-  // Security
-  security: {
-    encryptionKey: process.env.ENCRYPTION_KEY || 'default-encryption-key',
-    corsOrigins: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:3000'],
-    trustedProxies: process.env.TRUSTED_PROXIES ? process.env.TRUSTED_PROXIES.split(',') : [],
   }
 };
 

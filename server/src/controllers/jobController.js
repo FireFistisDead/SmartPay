@@ -5,8 +5,13 @@ const logger = require('../utils/logger');
 const { AppError } = require('../middleware/errorHandler');
 const { ValidationUtils, FormatUtils } = require('../utils/helpers');
 const redisClient = require('../config/redis');
+const ContractService = require('../services/contractService');
 
 class JobController {
+  constructor() {
+    this.contractService = new ContractService();
+  }
+
   /**
    * Get all jobs with filtering and pagination
    */
@@ -291,7 +296,17 @@ class JobController {
         totalAmount = (parseFloat(totalAmount) + parseFloat(milestone.amount)).toString();
       }
 
-      // Create job object (this will be stored in DB when blockchain event is processed)
+      // Prepare data for blockchain transaction
+      const blockchainJobData = {
+        freelancerAddress: '0x0000000000000000000000000000000000000000', // Will be set when freelancer accepts
+        arbiterAddress: arbiter.toLowerCase(),
+        totalAmount: totalAmount,
+        ipfsHash: ipfsHash || '',
+        milestoneAmounts: milestones.map(m => m.amount),
+        milestoneDueDates: milestones.map(m => m.dueDate)
+      };
+
+      // Create job object for database (will be saved when blockchain event is processed)
       const jobData = {
         title: ValidationUtils.sanitizeString(title, 200),
         description: ValidationUtils.sanitizeString(description, 5000),
@@ -307,26 +322,73 @@ class JobController {
           dueDate: new Date(milestone.dueDate),
           status: 'pending'
         })),
-        ipfsHash,
+        ipfsHash: ipfsHash || '',
         status: 'open'
       };
 
-      // For now, return the job data that should be used for blockchain transaction
-      // In a real implementation, this would trigger a blockchain transaction
-      res.status(200).json({
-        message: 'Job data prepared for blockchain transaction',
-        jobData,
-        instructions: {
-          1: 'Use this data to call the createJob function on the smart contract',
-          2: 'The backend will automatically detect and process the blockchain event',
-          3: 'Job will be available in the database once the transaction is confirmed'
-        }
+      logger.info('Creating job on blockchain:', {
+        client: req.user.address,
+        arbiter: arbiter,
+        totalAmount,
+        milestones: milestones.length
       });
+
+      // Send transaction to blockchain
+      try {
+        const blockchainResult = await this.contractService.createJob(blockchainJobData);
+        
+        logger.info('Job created on blockchain successfully:', {
+          jobId: blockchainResult.jobId,
+          transactionHash: blockchainResult.transactionHash
+        });
+
+        // Store pending job data in cache for when the event is processed
+        const pendingJobKey = `pending_job_${blockchainResult.transactionHash}`;
+        await redisClient.set(pendingJobKey, JSON.stringify(jobData), { ttl: 3600 }); // 1 hour TTL
+
+        res.status(200).json({
+          success: true,
+          message: 'Job creation transaction sent to blockchain',
+          jobId: blockchainResult.jobId,
+          transactionHash: blockchainResult.transactionHash,
+          blockNumber: blockchainResult.blockNumber,
+          status: 'pending_confirmation',
+          jobData: {
+            ...jobData,
+            jobId: blockchainResult.jobId,
+            transactionHash: blockchainResult.transactionHash
+          }
+        });
+
+      } catch (blockchainError) {
+        logger.error('Blockchain transaction failed:', blockchainError);
+        
+        // For development/testing, allow fallback to database-only creation
+        if (process.env.NODE_ENV === 'development' && blockchainError.code === 'BLOCKCHAIN_INIT_ERROR') {
+          logger.warn('Falling back to database-only job creation for development');
+          
+          // Generate a temporary job ID for development
+          const tempJobId = Math.floor(Math.random() * 1000000);
+          jobData.jobId = tempJobId;
+          jobData.status = 'open';
+          
+          const job = await Job.create(jobData);
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Job created in database (development mode - no blockchain)',
+            job,
+            warning: 'This job exists only in the database. Deploy smart contract for full functionality.'
+          });
+        }
+        
+        throw blockchainError;
+      }
 
     } catch (error) {
       logger.error('Error creating job:', error);
       if (error instanceof AppError) throw error;
-      throw new AppError('Failed to create job', 500, 'DATABASE_ERROR');
+      throw new AppError('Failed to create job', 500, 'JOB_CREATION_ERROR');
     }
   }
 
@@ -495,6 +557,7 @@ class JobController {
    */
   async cancelJob(req, res) {
     const { jobId } = req.params;
+    const { reason } = req.body;
 
     try {
       const job = await Job.findOne({ jobId: parseInt(jobId) });
@@ -508,21 +571,64 @@ class JobController {
         throw new AppError('Cannot cancel job in current status', 400, 'JOB_NOT_CANCELLABLE');
       }
 
-      // This should trigger a blockchain transaction
-      // For now, just return instructions
-      res.status(200).json({
-        message: 'Job cancellation prepared',
-        instructions: {
-          1: 'Call the cancelJob function on the smart contract',
-          2: 'The backend will process the blockchain event and update the job status'
-        },
-        jobId: parseInt(jobId)
+      const cancellationReason = reason || 'Job cancelled by client';
+
+      logger.info(`Cancelling job ${jobId}:`, {
+        client: req.user.address,
+        reason: cancellationReason
       });
+
+      // Send transaction to blockchain
+      try {
+        const blockchainResult = await this.contractService.cancelJob(
+          job.jobId,
+          cancellationReason
+        );
+
+        logger.info('Job cancelled on blockchain successfully:', {
+          jobId: job.jobId,
+          transactionHash: blockchainResult.transactionHash
+        });
+
+        res.status(200).json({
+          success: true,
+          message: 'Job cancellation transaction sent to blockchain',
+          jobId: parseInt(jobId),
+          reason: cancellationReason,
+          transactionHash: blockchainResult.transactionHash,
+          blockNumber: blockchainResult.blockNumber,
+          status: 'pending_confirmation'
+        });
+
+      } catch (blockchainError) {
+        logger.error('Blockchain transaction failed:', blockchainError);
+        
+        // For development/testing, allow fallback to database-only update
+        if (process.env.NODE_ENV === 'development' && blockchainError.code === 'BLOCKCHAIN_INIT_ERROR') {
+          logger.warn('Falling back to database-only job cancellation for development');
+          
+          // Update job in database
+          job.status = 'cancelled';
+          job.cancelledAt = new Date();
+          job.cancelReason = cancellationReason;
+          
+          await job.save();
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Job cancelled (development mode - no blockchain)',
+            job: job.toObject(),
+            warning: 'This update exists only in the database. Deploy smart contract for full functionality.'
+          });
+        }
+        
+        throw blockchainError;
+      }
 
     } catch (error) {
       logger.error('Error cancelling job:', error);
       if (error instanceof AppError) throw error;
-      throw new AppError('Failed to cancel job', 500, 'DATABASE_ERROR');
+      throw new AppError('Failed to cancel job', 500, 'JOB_CANCELLATION_ERROR');
     }
   }
 
@@ -547,27 +653,63 @@ class JobController {
         throw new AppError('Cannot accept your own job', 400, 'CANNOT_ACCEPT_OWN_JOB');
       }
 
-      // Check if user is a freelancer
-      if (!req.user.isFreelancer()) {
-        throw new AppError('Only freelancers can accept jobs', 403, 'NOT_FREELANCER');
-      }
-
-      // This should trigger a blockchain transaction
-      // For now, just return instructions
-      res.status(200).json({
-        message: 'Job acceptance prepared',
-        instructions: {
-          1: 'Call the acceptJob function on the smart contract',
-          2: 'The backend will process the blockchain event and assign you to the job'
-        },
-        jobId: parseInt(jobId),
-        freelancer: req.user.address
+      logger.info(`Job ${jobId} being accepted by freelancer:`, {
+        freelancer: req.user.address,
+        client: job.client
       });
+
+      // Send transaction to blockchain
+      try {
+        const blockchainResult = await this.contractService.acceptJob(
+          job.jobId,
+          req.user.address
+        );
+
+        logger.info('Job accepted on blockchain successfully:', {
+          jobId: job.jobId,
+          freelancer: req.user.address,
+          transactionHash: blockchainResult.transactionHash
+        });
+
+        res.status(200).json({
+          success: true,
+          message: 'Job acceptance transaction sent to blockchain',
+          jobId: parseInt(jobId),
+          freelancer: req.user.address,
+          transactionHash: blockchainResult.transactionHash,
+          blockNumber: blockchainResult.blockNumber,
+          status: 'pending_confirmation'
+        });
+
+      } catch (blockchainError) {
+        logger.error('Blockchain transaction failed:', blockchainError);
+        
+        // For development/testing, allow fallback to database-only update
+        if (process.env.NODE_ENV === 'development' && blockchainError.code === 'BLOCKCHAIN_INIT_ERROR') {
+          logger.warn('Falling back to database-only job acceptance for development');
+          
+          // Update job in database
+          job.freelancer = req.user.address.toLowerCase();
+          job.status = 'assigned';
+          job.acceptedAt = new Date();
+          
+          await job.save();
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Job accepted (development mode - no blockchain)',
+            job: job.toObject(),
+            warning: 'This update exists only in the database. Deploy smart contract for full functionality.'
+          });
+        }
+        
+        throw blockchainError;
+      }
 
     } catch (error) {
       logger.error('Error accepting job:', error);
       if (error instanceof AppError) throw error;
-      throw new AppError('Failed to accept job', 500, 'DATABASE_ERROR');
+      throw new AppError('Failed to accept job', 500, 'JOB_ACCEPTANCE_ERROR');
     }
   }
 
