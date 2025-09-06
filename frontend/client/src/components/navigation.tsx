@@ -78,18 +78,11 @@ export default function Navigation() {
             {/* Desktop buttons */}
             <div className="hidden md:flex items-center space-x-4">
               <Button 
-                variant="ghost" 
-                size="sm"
-                data-testid="button-wallet"
-              >
-                <Wallet className="h-4 w-4" />
-              </Button>
-              <Button 
                 size="sm"
                 onClick={() => window.location.href = "/login"}
                 data-testid="button-launch-app"
               >
-                Get Started
+                Login/SignUp
               </Button>
             </div>
           </div>
@@ -129,19 +122,12 @@ export default function Navigation() {
             </button>
             <div className="flex items-center space-x-3 pt-2">
               <Button 
-                variant="ghost" 
-                size="sm"
-                data-testid="button-mobile-wallet"
-              >
-                <Wallet className="h-4 w-4" />
-              </Button>
-              <Button 
                 size="sm"
                 onClick={() => window.location.href = "/login"}
                 data-testid="button-mobile-launch-app"
                 className="flex-1"
               >
-                Get Started
+                Login/SignUp
               </Button>
             </div>
           </div>

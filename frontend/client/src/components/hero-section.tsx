@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useLocation } from "wouter";
 import { useParallax } from "@/hooks/use-parallax";
 import { Button } from "@/components/ui/button";
 import { UserCheck, Laptop } from "lucide-react";
@@ -23,7 +24,16 @@ const FloatingIcon = ({ icon, className, delay = 0 }: { icon: React.ReactNode; c
 );
 
 export default function HeroSection() {
+  const [, setLocation] = useLocation();
   const { ref } = useParallax(0.5);
+
+  const handleHireTalent = () => {
+    setLocation("/login?role=client");
+  };
+
+  const handleWorkAsFreelancer = () => {
+    setLocation("/login?role=freelancer");
+  };
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden blockchain-grid pt-20" ref={ref}>
@@ -92,6 +102,7 @@ export default function HeroSection() {
               size="lg" 
               className="px-7 py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-xl text-lg font-semibold hover:scale-105 transition-all duration-300 animate-glow shadow-lg hover:shadow-xl"
               data-testid="button-hire-talent"
+              onClick={handleHireTalent}
             >
               <UserCheck className="mr-2" />
               Hire Talent
@@ -99,8 +110,9 @@ export default function HeroSection() {
             <Button 
               size="lg" 
               variant="outline" 
-              className="px-7 py-4 glass-morphism text-foreground rounded-xl text-lg font-semibold hover:scale-105 transition-all duration-300 hover:bg-primary/10 border-primary/50"
+              className="px-7 py-4 glass-morphism text-foreground rounded-xl text-lg font-semibold hover:scale-105 transition-all duration-300 hover:bg-muted/20 border-muted-foreground/30 animate-glow-secondary shadow-lg hover:shadow-xl"
               data-testid="button-work-freelancer"
+              onClick={handleWorkAsFreelancer}
             >
               <Laptop className="mr-2" />
               Work as Freelancer
