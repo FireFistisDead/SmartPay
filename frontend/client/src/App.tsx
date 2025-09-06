@@ -15,7 +15,12 @@ import CreateProject from "@/pages/create-project";
 import MyProjects from "@/pages/my-projects";
 import FindFreelancers from "@/pages/find-freelancers";
 import PaymentsEscrow from "@/pages/payments-escrow";
+import MessagesDisputes from "@/pages/messages-disputes";
 import BrowseProjects from "@/pages/browse-projects";
+import ProfileSettings from "@/pages/profile-settings";
+import Analytics from "@/pages/analytics";
+import Notifications from "@/pages/notifications";
+import HelpSupport from "@/pages/help-support";
 import NotFound from "@/pages/not-found";
 
 function DashboardRouter() {
@@ -42,7 +47,12 @@ function Router() {
       <Route path="/my-projects" component={MyProjects} />
       <Route path="/find-freelancers" component={FindFreelancers} />
       <Route path="/payments-escrow" component={PaymentsEscrow} />
+      <Route path="/messages-disputes" component={MessagesDisputes} />
       <Route path="/browse-projects" component={BrowseProjects} />
+      <Route path="/profile-settings" component={ProfileSettings} />
+      <Route path="/analytics" component={Analytics} />
+      <Route path="/notifications" component={Notifications} />
+      <Route path="/help-support" component={HelpSupport} />
       <Route component={NotFound} />
     </Switch>
   );
