@@ -1,31 +1,44 @@
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useParallax } from "@/hooks/use-parallax";
+import { useSmartAnimations, useCursorSpeed } from "@/hooks/use-smart-animations";
 import { Button } from "@/components/ui/button";
 import { UserCheck, Laptop } from "lucide-react";
 import ParticleBackground from "./particle-background";
 
-const FloatingIcon = ({ icon, className, delay = 0 }: { icon: React.ReactNode; className: string; delay?: number }) => (
-  <motion.div
-    className={`absolute text-4xl opacity-30 ${className}`}
-    animate={{
-      y: [-20, 20, -20],
-      rotate: [0, 180, 360],
-    }}
-    transition={{
-      duration: 4,
-      repeat: Infinity,
-      ease: "easeInOut",
-      delay,
-    }}
-  >
-    {icon}
-  </motion.div>
-);
+const FloatingIcon = ({ icon, className, delay = 0 }: { icon: React.ReactNode; className: string; delay?: number }) => {
+  const { cursorSpeed } = useCursorSpeed();
+  
+  return (
+    <motion.div
+      className={`absolute text-4xl opacity-20 ${className} will-change-transform`}
+      initial={{ y: -5, opacity: 0.15 }}
+      animate={{ y: 5, opacity: 0.25 }}
+      whileHover={{ 
+        y: 0, 
+        opacity: 0.4,
+        scale: 1.1,
+        transition: { 
+          duration: cursorSpeed > 300 ? 0.2 : 0.6,
+          ease: "easeOut"
+        }
+      }}
+      transition={{
+        duration: 4,
+        ease: "easeInOut",
+        delay,
+      }}
+    >
+      {icon}
+    </motion.div>
+  );
+};
 
 export default function HeroSection() {
   const [, setLocation] = useLocation();
   const { ref } = useParallax(0.5);
+  const { calculateAnimationConfig } = useSmartAnimations();
+  const { cursorSpeed } = useCursorSpeed();
 
   const handleHireTalent = () => {
     setLocation("/login?role=client");
@@ -73,7 +86,7 @@ export default function HeroSection() {
             className="text-4xl md:text-6xl lg:text-7xl font-bold mb-8 leading-tight tracking-tight"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={calculateAnimationConfig({ duration: 0.8 })}
             data-testid="text-hero-title"
           >
             <span className="gradient-text block">Decentralized Freelance.</span>
@@ -85,7 +98,7 @@ export default function HeroSection() {
             className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-12 max-w-4xl mx-auto leading-relaxed font-light"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={calculateAnimationConfig({ duration: 0.8, delay: 0.2 })}
             data-testid="text-hero-subtitle"
           >
             A blockchain-powered platform that automates milestone-based payments through smart contracts, 
@@ -96,27 +109,41 @@ export default function HeroSection() {
             className="flex flex-col sm:flex-row gap-5 justify-center mb-13"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            transition={calculateAnimationConfig({ duration: 0.8, delay: 0.4 })}
           >
-            <Button 
-              size="lg" 
-              className="px-7 py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-xl text-lg font-semibold hover:scale-105 transition-all duration-300 animate-glow shadow-lg hover:shadow-xl"
-              data-testid="button-hire-talent"
-              onClick={handleHireTalent}
+            <motion.div
+              whileHover={{ 
+                scale: 1.05,
+                transition: { duration: cursorSpeed > 300 ? 0.15 : 0.3 }
+              }}
             >
-              <UserCheck className="mr-2" />
-              Hire Talent
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="px-7 py-4 glass-morphism text-foreground rounded-xl text-lg font-semibold hover:scale-105 transition-all duration-300 hover:bg-muted/20 border-muted-foreground/30 animate-glow-secondary shadow-lg hover:shadow-xl"
-              data-testid="button-work-freelancer"
-              onClick={handleWorkAsFreelancer}
+              <Button 
+                size="lg" 
+                className="px-7 py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-xl text-lg font-semibold hover:scale-105 transition-all duration-300 animate-glow shadow-lg hover:shadow-xl"
+                data-testid="button-hire-talent"
+                onClick={handleHireTalent}
+              >
+                <UserCheck className="mr-2" />
+                Hire Talent
+              </Button>
+            </motion.div>
+            <motion.div
+              whileHover={{ 
+                scale: 1.05,
+                transition: { duration: cursorSpeed > 300 ? 0.15 : 0.3 }
+              }}
             >
-              <Laptop className="mr-2" />
-              Work as Freelancer
-            </Button>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="px-7 py-4 glass-morphism text-foreground rounded-xl text-lg font-semibold hover:scale-105 transition-all duration-300 hover:bg-muted/20 border-muted-foreground/30 animate-glow-secondary shadow-lg hover:shadow-xl"
+                data-testid="button-work-freelancer"
+                onClick={handleWorkAsFreelancer}
+              >
+                <Laptop className="mr-2" />
+                Work as Freelancer
+              </Button>
+            </motion.div>
           </motion.div>
         </div>
       </div>

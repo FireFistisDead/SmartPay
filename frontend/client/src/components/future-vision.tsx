@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Rocket, Globe, Users, TrendingUp, Zap, Star } from "lucide-react";
+import { useSmartAnimations } from "@/hooks/use-smart-animations";
 
 const visionItems = [
   {
@@ -35,6 +36,8 @@ const visionItems = [
 ];
 
 export default function FutureVision() {
+  const { calculateAnimationConfig, getViewportConfig, scrollMetrics } = useSmartAnimations();
+
   return (
     <section id="future-vision" className="py-20 relative overflow-hidden blockchain-grid">
       <div className="absolute inset-0 blockchain-grid opacity-5"></div>
@@ -44,12 +47,12 @@ export default function FutureVision() {
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
+          transition={calculateAnimationConfig({ duration: 0.8 })}
+          viewport={getViewportConfig({ once: true })}
         >
           <motion.div
             className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-primary/10 to-secondary/10 text-primary rounded-full mb-6"
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
           >
             <Rocket className="h-4 w-4 mr-2" />
             <span className="text-sm font-semibold">Future Roadmap</span>
@@ -68,46 +71,47 @@ export default function FutureVision() {
             {/* Timeline line */}
             <div className="absolute left-8 top-0 bottom-0 w-px bg-gradient-to-b from-primary via-secondary to-transparent hidden md:block"></div>
             
-            {visionItems.map((item, index) => (
-              <motion.div
-                key={item.title}
-                className="flex items-start mb-12 last:mb-0 relative"
-                initial={{ opacity: 0, x: -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.2 }}
-                viewport={{ once: true }}
-              >
-                {/* Timeline dot */}
+            {visionItems.map((item, index) => {
+              const animationConfig = calculateAnimationConfig({ 
+                duration: 0.8,
+                delay: scrollMetrics.isScrolling ? 0 : index * 0.1
+              });
+
+              return (
                 <motion.div
-                  className="flex-shrink-0 w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-xl flex items-center justify-center text-white mr-6 relative z-10"
-                  whileHover={{ scale: 1.1 }}
-                  animate={{ 
-                    boxShadow: [
-                      "0 0 20px rgba(139, 92, 246, 0.3)",
-                      "0 0 30px rgba(139, 92, 246, 0.5)",
-                      "0 0 20px rgba(139, 92, 246, 0.3)"
-                    ]
-                  }}
-                  transition={{ 
-                    boxShadow: { duration: 3, repeat: Infinity, delay: index * 0.5 }
-                  }}
+                  key={item.title}
+                  className="flex items-start mb-12 last:mb-0 relative"
+                  initial={{ opacity: 0, x: -50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={animationConfig}
+                  viewport={getViewportConfig({ once: true })}
                 >
-                  {item.icon}
-                </motion.div>
-                
-                <div className="flex-1 pt-2">
-                  <div className="flex items-center mb-3">
-                    <span className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full mr-3">
-                      {item.timeline}
-                    </span>
-                    <h3 className="text-xl font-semibold">{item.title}</h3>
+                  {/* Timeline dot */}
+                  <motion.div
+                    className="flex-shrink-0 w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-xl flex items-center justify-center text-white mr-6 relative z-10 will-change-transform"
+                    whileHover={{ 
+                      scale: 1.05,
+                      boxShadow: "0 0 25px rgba(139, 92, 246, 0.6)",
+                      transition: { duration: 0.2 }
+                    }}
+                  >
+                    {item.icon}
+                  </motion.div>
+                  
+                  <div className="flex-1 pt-2">
+                    <div className="flex items-center mb-3">
+                      <span className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full mr-3">
+                        {item.timeline}
+                      </span>
+                      <h3 className="text-xl font-semibold">{item.title}</h3>
+                    </div>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {item.description}
+                    </p>
                   </div>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {item.description}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
 
@@ -115,8 +119,8 @@ export default function FutureVision() {
           className="text-center mt-16 space-y-6"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1 }}
-          viewport={{ once: true }}
+          transition={calculateAnimationConfig({ duration: 0.8, delay: 0.3 })}
+          viewport={getViewportConfig({ once: true })}
         >
           <div className="max-w-2xl mx-auto p-6 glass-morphism rounded-2xl border border-primary/20">
             <h3 className="text-lg font-semibold mb-3 gradient-text">Ready to Join the Revolution?</h3>
