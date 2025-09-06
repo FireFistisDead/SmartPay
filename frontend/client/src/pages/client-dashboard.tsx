@@ -769,7 +769,7 @@ export default function ClientDashboard() {
                 <TabsContent value="freelancers" className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-bold">Top Freelancers</h2>
-                    <Button variant="outline" onClick={() => setLocation("/browse-projects")}>
+                    <Button variant="outline" onClick={() => setLocation("/find-freelancers")}>
                       Browse All Talent
                     </Button>
                   </div>

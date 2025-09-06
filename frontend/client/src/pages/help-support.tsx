@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useDashboardNavigation } from "@/hooks/use-dashboard-navigation";
 import { 
   ArrowLeft,
   HelpCircle,
@@ -70,6 +71,7 @@ interface Resource {
 
 export default function HelpSupport() {
   const [, setLocation] = useLocation();
+  const { goToDashboard } = useDashboardNavigation();
   const [activeTab, setActiveTab] = useState("faq");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -285,7 +287,7 @@ export default function HelpSupport() {
           <div className="flex items-center space-x-4">
             <Button
               variant="outline"
-              onClick={() => setLocation("/dashboard")}
+              onClick={goToDashboard}
               className="glass-morphism border-border/30 hover:border-primary/50"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />

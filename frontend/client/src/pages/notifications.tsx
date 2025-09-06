@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useDashboardNavigation } from "@/hooks/use-dashboard-navigation";
 import { 
   ArrowLeft,
   Bell,
@@ -56,6 +57,7 @@ interface Notification {
 
 export default function Notifications() {
   const [, setLocation] = useLocation();
+  const { goToDashboard } = useDashboardNavigation();
   const [activeTab, setActiveTab] = useState("all");
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
@@ -308,7 +310,7 @@ export default function Notifications() {
           <div className="flex items-center space-x-4">
             <Button
               variant="outline"
-              onClick={() => setLocation("/dashboard")}
+              onClick={goToDashboard}
               className="glass-morphism border-border/30 hover:border-primary/50"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />

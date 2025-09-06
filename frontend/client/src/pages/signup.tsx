@@ -100,7 +100,13 @@ export default function Signup() {
     setTimeout(() => {
       // In production, this would handle actual account creation
       localStorage.setItem("userRole", role);
-      setLocation("/dashboard");
+      if (role === "client") {
+        setLocation("/client-dashboard");
+      } else if (role === "freelancer") {
+        setLocation("/freelancer-dashboard");
+      } else {
+        setLocation("/dashboard");
+      }
     }, 2000);
   };
 
