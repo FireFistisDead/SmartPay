@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useDashboardNavigation } from "@/hooks/use-dashboard-navigation";
 import { 
   ArrowLeft,
   User,
@@ -45,6 +46,7 @@ import { useSmartAnimations } from "@/hooks/use-smart-animations";
 
 export default function ProfileSettings() {
   const [, setLocation] = useLocation();
+  const { goToDashboard } = useDashboardNavigation();
   const [activeTab, setActiveTab] = useState("profile");
   const [showPassword, setShowPassword] = useState(false);
   const [theme, setTheme] = useState("system");
@@ -122,7 +124,7 @@ export default function ProfileSettings() {
           <div className="flex items-center space-x-4">
             <Button
               variant="outline"
-              onClick={() => setLocation("/dashboard")}
+              onClick={goToDashboard}
               className="glass-morphism border-border/30 hover:border-primary/50"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />

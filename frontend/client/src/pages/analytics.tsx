@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useDashboardNavigation } from "@/hooks/use-dashboard-navigation";
 import { 
   ArrowLeft,
   TrendingUp,
@@ -78,6 +79,7 @@ interface AnalyticsData {
 
 export default function Analytics() {
   const [, setLocation] = useLocation();
+  const { goToDashboard } = useDashboardNavigation();
   const [activeTab, setActiveTab] = useState("overview");
   const [timeRange, setTimeRange] = useState("6months");
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
@@ -184,7 +186,7 @@ export default function Analytics() {
           <div className="flex items-center space-x-4">
             <Button
               variant="outline"
-              onClick={() => setLocation("/dashboard")}
+              onClick={goToDashboard}
               className="glass-morphism border-border/30 hover:border-primary/50"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />

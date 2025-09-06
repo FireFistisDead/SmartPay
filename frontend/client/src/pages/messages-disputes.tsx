@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useDashboardNavigation } from "@/hooks/use-dashboard-navigation";
 import { 
   ArrowLeft,
   MessageSquare,
@@ -129,6 +130,7 @@ interface DisputeMessage {
 
 export default function MessagesDisputes() {
   const [, setLocation] = useLocation();
+  const { goToDashboard } = useDashboardNavigation();
   const [activeTab, setActiveTab] = useState("messages");
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [disputes, setDisputes] = useState<Dispute[]>([]);
@@ -460,7 +462,7 @@ export default function MessagesDisputes() {
           <div className="flex items-center space-x-4">
             <Button
               variant="outline"
-              onClick={() => setLocation("/dashboard")}
+              onClick={goToDashboard}
               className="glass-morphism border-border/30 hover:border-primary/50"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />

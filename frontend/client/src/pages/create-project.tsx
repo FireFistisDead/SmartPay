@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
+import { useDashboardNavigation } from "@/hooks/use-dashboard-navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,7 @@ interface Milestone {
 
 export default function CreateProject() {
   const [, setLocation] = useLocation();
+  const { goToDashboard } = useDashboardNavigation();
   const [currentStep, setCurrentStep] = useState(1);
   const [projectData, setProjectData] = useState({
     title: "",
@@ -56,7 +58,7 @@ export default function CreateProject() {
   const handleSubmit = () => {
     // In production, this would create the smart contract and deploy
     console.log("Creating project:", { projectData, milestones });
-    setLocation("/dashboard");
+    goToDashboard();
   };
 
   const steps = [
@@ -74,7 +76,7 @@ export default function CreateProject() {
             <div className="flex items-center space-x-4">
               <Button 
                 variant="ghost" 
-                onClick={() => setLocation("/dashboard")}
+                onClick={goToDashboard}
                 data-testid="button-back"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />

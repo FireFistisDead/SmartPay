@@ -101,7 +101,13 @@ export default function Login() {
           title: "Login Successful!",
           description: `Welcome back, ${selectedRole}!`,
         });
-        setLocation("/dashboard");
+        if (selectedRole === "client") {
+          setLocation("/client-dashboard");
+        } else if (selectedRole === "freelancer") {
+          setLocation("/freelancer-dashboard");
+        } else {
+          setLocation("/dashboard");
+        }
       }
     } catch (error: any) {
       setErrorMessage(error.message || "Authentication failed");
@@ -125,7 +131,13 @@ export default function Login() {
         title: "Login Successful!",
         description: `Welcome, ${selectedRole}!`,
       });
-      setLocation("/dashboard");
+      if (selectedRole === "client") {
+        setLocation("/client-dashboard");
+      } else if (selectedRole === "freelancer") {
+        setLocation("/freelancer-dashboard");
+      } else {
+        setLocation("/dashboard");
+      }
     } catch (error: any) {
       setErrorMessage(error.message || "Google authentication failed");
     } finally {
