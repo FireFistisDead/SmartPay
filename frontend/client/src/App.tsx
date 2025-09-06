@@ -12,6 +12,9 @@ import ForgotPassword from "@/pages/forgot-password";
 import ClientDashboard from "@/pages/client-dashboard";
 import FreelancerDashboard from "@/pages/freelancer-dashboard";
 import CreateProject from "@/pages/create-project";
+import MyProjects from "@/pages/my-projects";
+import FindFreelancers from "@/pages/find-freelancers";
+import PaymentsEscrow from "@/pages/payments-escrow";
 import BrowseProjects from "@/pages/browse-projects";
 import NotFound from "@/pages/not-found";
 
@@ -36,6 +39,9 @@ function Router() {
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/dashboard" component={DashboardRouter} />
       <Route path="/create-project" component={CreateProject} />
+      <Route path="/my-projects" component={MyProjects} />
+      <Route path="/find-freelancers" component={FindFreelancers} />
+      <Route path="/payments-escrow" component={PaymentsEscrow} />
       <Route path="/browse-projects" component={BrowseProjects} />
       <Route component={NotFound} />
     </Switch>
