@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Wallet, Users, Briefcase, ArrowRight, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Wallet, Users, Briefcase, ArrowRight, User, Mail, Lock, Eye, EyeOff, Home } from "lucide-react";
 import ParticleBackground from "@/components/particle-background";
 
 const FloatingIcon = ({ icon, className, delay = 0 }: { icon: React.ReactNode; className: string; delay?: number }) => (
@@ -113,6 +113,25 @@ export default function Signup() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 blockchain-grid opacity-10"></div>
       <ParticleBackground />
+      
+      {/* Back to Home Button */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="absolute top-6 right-6 z-20"
+      >
+        <Link href="/">
+          <Button
+            variant="outline"
+            size="sm"
+            className="glass-morphism border-border/30 hover:border-primary/50 hover:bg-primary/10 transition-all duration-300 hover:scale-105 shadow-lg backdrop-blur-md"
+          >
+            <Home className="w-4 h-4 mr-2" />
+            Back to Home
+          </Button>
+        </Link>
+      </motion.div>
       
       {/* Floating Icons */}
       <div className="absolute inset-0 z-5">
