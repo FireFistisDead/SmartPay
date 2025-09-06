@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // API base URL
+  // API base URL - using relative path since frontend and backend are served together
   const API_BASE = '/api';
 
   const login = async (email: string, password: string, role: 'client' | 'freelancer') => {

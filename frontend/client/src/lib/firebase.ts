@@ -2,13 +2,13 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 
 const firebaseConfig = {
-  // Add your Firebase config here
-  apiKey: process.env.VITE_FIREBASE_API_KEY || "your-api-key",
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || "your-project.firebaseapp.com",
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID || "your-project-id",
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || "your-project.appspot.com",
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "123456789",
-  appId: process.env.VITE_FIREBASE_APP_ID || "your-app-id"
+  apiKey: "AIzaSyDP8l0NzNT2HA3OD-1YbTFZbLduaJv5Stg",
+  authDomain: "blockchain-9ff21.firebaseapp.com",
+  projectId: "blockchain-9ff21",
+  storageBucket: "blockchain-9ff21.firebasestorage.app",
+  messagingSenderId: "1043682925172",
+  appId: "1:1043682925172:web:de5608fe1bf5bfe3884f21",
+  measurementId: "G-56TJD7EZP8"
 };
 
 // Initialize Firebase
