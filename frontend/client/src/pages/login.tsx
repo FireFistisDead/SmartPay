@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wallet, Users, Briefcase, ArrowRight, Home, Mail } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import ParticleBackground from "@/components/particle-background";
 
 const FloatingIcon = ({ icon, className, delay = 0 }: { icon: React.ReactNode; className: string; delay?: number }) => (
   <motion.div
@@ -162,6 +163,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 blockchain-grid opacity-10"></div>
+      <ParticleBackground />
       
       {/* Back to Home Button */}
       <motion.div
@@ -464,12 +466,21 @@ export default function Login() {
                 >
                   <p>
                     {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
-                    <button 
-                      onClick={() => setIsSignup(!isSignup)}
-                      className="text-primary hover:underline"
-                    >
-                      {isSignup ? "Login here" : "Sign up here"}
-                    </button>
+                    {isSignup ? (
+                      <button 
+                        onClick={() => setIsSignup(false)}
+                        className="text-primary hover:underline"
+                      >
+                        Login here
+                      </button>
+                    ) : (
+                      <Link 
+                        href="/signup"
+                        className="text-primary hover:underline"
+                      >
+                        Sign up here
+                      </Link>
+                    )}
                   </p>
                 </motion.div>
               </TabsContent>
