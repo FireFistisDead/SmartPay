@@ -1,567 +1,384 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import "./MyToken.sol";
 
-contract MilestoneEscrow is ReentrancyGuard, Ownable, Pausable {
-    
-    enum MilestoneStatus {
-        Pending,        // Milestone created but not started
-        InProgress,     // Freelancer is working on it
-        Submitted,      // Freelancer submitted work for review
-        Approved,       // Client approved the milestone
-        Disputed,       // Either party raised a dispute
-        Completed,      // Payment released to freelancer
-        Cancelled       // Milestone cancelled, funds returned
-    }
-    
-    enum JobStatus {
-        Active,
-        Completed,
-        Cancelled,
-        Disputed
-    }
-    
+/**
+ * @title MilestoneEscrow
+ * @dev Simplified milestone escrow without automation
+ * @dev Manual client approval system with basic dispute resolution
+ */
+contract MilestoneEscrow {
+    enum MilestoneStatus { Created, Submitted, Approved, Disputed, Completed, Cancelled }
+    enum DisputeStatus { None, Raised, UnderReview, Resolved }
+
     struct Milestone {
         uint256 id;
-        string description;
+        uint256 projectId;
+        address freelancer;
+        address client;
         uint256 amount;
+        string description;
+        string deliverableHash; // IPFS hash or other identifier
         uint256 deadline;
         MilestoneStatus status;
-        string submissionHash; // IPFS hash or URL of submitted work
-        uint256 submittedAt;
-        uint256 approvedAt;
+        uint256 submissionTime;
+        uint256 approvalTime;
     }
-    
-    struct Job {
-        uint256 id;
-        address client;
-        address freelancer;
-        address paymentToken;
-        uint256 totalAmount;
-        uint256 platformFee; // Fee percentage (basis points: 250 = 2.5%)
-        JobStatus status;
-        uint256 createdAt;
-        uint256 disputeDeadline; // Deadline for raising disputes
-        bool fundsDeposited;
-        Milestone[] milestones;
-    }
-    
+
     struct Dispute {
-        uint256 jobId;
         uint256 milestoneId;
         address initiator;
         string reason;
-        bool resolved;
-        address winner; // address(0) if not resolved
+        DisputeStatus status;
+        uint256 createdAt;
+        uint256 resolvedAt;
+        address resolver;
+        bool clientFavor; // true if resolved in client's favor
+    }
+
+    struct Project {
+        uint256 id;
+        address client;
+        address freelancer;
+        string title;
+        string description;
+        uint256 totalBudget;
+        uint256 platformFee; // percentage in basis points (100 = 1%)
+        bool active;
         uint256 createdAt;
     }
-    
-    // State variables
-    mapping(uint256 => Job) public jobs;
+
+    MyToken public paymentToken;
+    address public owner;
+    address public platformWallet;
+    uint256 public defaultPlatformFee = 250; // 2.5%
+    uint256 public disputeWindow = 7 days;
+    uint256 public autoApprovalDelay = 14 days;
+
+    uint256 private nextProjectId = 1;
+    uint256 private nextMilestoneId = 1;
+
+    mapping(uint256 => Project) public projects;
+    mapping(uint256 => Milestone) public milestones;
     mapping(uint256 => Dispute) public disputes;
-    mapping(address => uint256[]) public clientJobs;
-    mapping(address => uint256[]) public freelancerJobs;
-    
-    uint256 public jobCounter;
-    uint256 public disputeCounter;
-    uint256 public defaultPlatformFee = 250; // 2.5% in basis points
-    uint256 public disputeWindow = 7 days; // Time window to raise disputes
-    address public feeRecipient;
-    address public disputeResolver; // Address authorized to resolve disputes
-    
+    mapping(uint256 => uint256[]) public projectMilestones; // projectId => milestoneIds
+    mapping(address => uint256[]) public clientProjects;
+    mapping(address => uint256[]) public freelancerProjects;
+
     // Events
-    event JobCreated(
-        uint256 indexed jobId,
-        address indexed client,
-        address indexed freelancer,
-        uint256 totalAmount,
-        uint256 milestonesCount
-    );
-    
-    event FundsDeposited(uint256 indexed jobId, uint256 amount);
-    
-    event MilestoneStarted(
-        uint256 indexed jobId,
-        uint256 indexed milestoneId,
-        address indexed freelancer
-    );
-    
-    event MilestoneSubmitted(
-        uint256 indexed jobId,
-        uint256 indexed milestoneId,
-        string submissionHash
-    );
-    
-    event MilestoneApproved(
-        uint256 indexed jobId,
-        uint256 indexed milestoneId,
-        address indexed client
-    );
-    
-    event PaymentReleased(
-        uint256 indexed jobId,
-        uint256 indexed milestoneId,
-        address indexed freelancer,
-        uint256 amount
-    );
-    
-    event DisputeRaised(
-        uint256 indexed disputeId,
-        uint256 indexed jobId,
-        uint256 indexed milestoneId,
-        address initiator
-    );
-    
-    event DisputeResolved(
-        uint256 indexed disputeId,
-        address indexed winner,
-        uint256 compensation
-    );
-    
-    event JobCompleted(uint256 indexed jobId);
-    event JobCancelled(uint256 indexed jobId);
-    
-    // Modifiers
-    modifier onlyJobParticipant(uint256 _jobId) {
-        Job storage job = jobs[_jobId];
-        require(
-            msg.sender == job.client || msg.sender == job.freelancer,
-            "Not authorized for this job"
-        );
+    event ProjectCreated(uint256 indexed projectId, address indexed client, address indexed freelancer, uint256 totalBudget);
+    event MilestoneCreated(uint256 indexed milestoneId, uint256 indexed projectId, uint256 amount, string description);
+    event MilestoneSubmitted(uint256 indexed milestoneId, string deliverableHash, uint256 submissionTime);
+    event MilestoneApproved(uint256 indexed milestoneId, uint256 approvalTime);
+    event MilestoneCompleted(uint256 indexed milestoneId, uint256 paymentAmount, uint256 platformFee);
+    event DisputeRaised(uint256 indexed milestoneId, address indexed initiator, string reason);
+    event DisputeResolved(uint256 indexed milestoneId, address indexed resolver, bool clientFavor);
+    event FundsWithdrawn(address indexed recipient, uint256 amount);
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
         _;
     }
-    
-    modifier onlyClient(uint256 _jobId) {
-        require(jobs[_jobId].client == msg.sender, "Only client can call this");
+
+    modifier onlyProjectParties(uint256 _projectId) {
+        Project memory project = projects[_projectId];
+        require(msg.sender == project.client || msg.sender == project.freelancer, "Not project party");
         _;
     }
-    
-    modifier onlyFreelancer(uint256 _jobId) {
-        require(jobs[_jobId].freelancer == msg.sender, "Only freelancer can call this");
+
+    modifier onlyClient(uint256 _milestoneId) {
+        require(msg.sender == milestones[_milestoneId].client, "Not client");
         _;
     }
-    
-    modifier jobExists(uint256 _jobId) {
-        require(_jobId < jobCounter, "Job does not exist");
+
+    modifier onlyFreelancer(uint256 _milestoneId) {
+        require(msg.sender == milestones[_milestoneId].freelancer, "Not freelancer");
         _;
     }
-    
-    modifier validMilestone(uint256 _jobId, uint256 _milestoneId) {
-        require(_milestoneId < jobs[_jobId].milestones.length, "Invalid milestone ID");
-        _;
+
+    constructor(address _paymentToken, address _platformWallet) {
+        paymentToken = MyToken(_paymentToken);
+        owner = msg.sender;
+        platformWallet = _platformWallet;
     }
-    
-    constructor(address _feeRecipient, address _disputeResolver) Ownable(msg.sender) {
-        feeRecipient = _feeRecipient;
-        disputeResolver = _disputeResolver;
-    }
-    
+
     /**
-     * @dev Create a new job with milestones
-     * @param _freelancer Address of the freelancer
-     * @param _paymentToken Token to be used for payments
-     * @param _milestoneDescriptions Array of milestone descriptions
-     * @param _milestoneAmounts Array of milestone amounts
-     * @param _milestoneDeadlines Array of milestone deadlines
+     * @dev Create a new project
      */
-    function createJob(
+    function createProject(
         address _freelancer,
-        address _paymentToken,
-        string[] memory _milestoneDescriptions,
-        uint256[] memory _milestoneAmounts,
-        uint256[] memory _milestoneDeadlines
-    ) external whenNotPaused returns (uint256) {
+        string memory _title,
+        string memory _description,
+        uint256 _totalBudget
+    ) external returns (uint256) {
         require(_freelancer != address(0), "Invalid freelancer address");
-        require(_freelancer != msg.sender, "Client cannot be freelancer");
-        require(_paymentToken != address(0), "Invalid payment token");
-        require(_milestoneDescriptions.length > 0, "At least one milestone required");
-        require(
-            _milestoneDescriptions.length == _milestoneAmounts.length &&
-            _milestoneAmounts.length == _milestoneDeadlines.length,
-            "Milestone arrays length mismatch"
-        );
+        require(_freelancer != msg.sender, "Client and freelancer cannot be same");
+        require(_totalBudget > 0, "Budget must be greater than 0");
+
+        uint256 projectId = nextProjectId++;
         
-        uint256 jobId = jobCounter++;
-        Job storage newJob = jobs[jobId];
-        
-        newJob.id = jobId;
-        newJob.client = msg.sender;
-        newJob.freelancer = _freelancer;
-        newJob.paymentToken = _paymentToken;
-        newJob.platformFee = defaultPlatformFee;
-        newJob.status = JobStatus.Active;
-        newJob.createdAt = block.timestamp;
-        newJob.disputeDeadline = block.timestamp + disputeWindow;
-        
-        uint256 totalAmount = 0;
-        for (uint256 i = 0; i < _milestoneDescriptions.length; i++) {
-            require(_milestoneAmounts[i] > 0, "Milestone amount must be positive");
-            require(_milestoneDeadlines[i] > block.timestamp, "Deadline must be in future");
-            
-            newJob.milestones.push(Milestone({
-                id: i,
-                description: _milestoneDescriptions[i],
-                amount: _milestoneAmounts[i],
-                deadline: _milestoneDeadlines[i],
-                status: MilestoneStatus.Pending,
-                submissionHash: "",
-                submittedAt: 0,
-                approvedAt: 0
-            }));
-            
-            totalAmount += _milestoneAmounts[i];
-        }
-        
-        newJob.totalAmount = totalAmount;
-        
-        clientJobs[msg.sender].push(jobId);
-        freelancerJobs[_freelancer].push(jobId);
-        
-        emit JobCreated(jobId, msg.sender, _freelancer, totalAmount, _milestoneDescriptions.length);
-        
-        return jobId;
+        Project storage project = projects[projectId];
+        project.id = projectId;
+        project.client = msg.sender;
+        project.freelancer = _freelancer;
+        project.title = _title;
+        project.description = _description;
+        project.totalBudget = _totalBudget;
+        project.platformFee = defaultPlatformFee;
+        project.active = true;
+        project.createdAt = block.timestamp;
+
+        clientProjects[msg.sender].push(projectId);
+        freelancerProjects[_freelancer].push(projectId);
+
+        emit ProjectCreated(projectId, msg.sender, _freelancer, _totalBudget);
+        return projectId;
     }
-    
+
     /**
-     * @dev Client deposits funds for the job
-     * @param _jobId ID of the job
+     * @dev Create a milestone for a project
      */
-    function depositFunds(uint256 _jobId) 
-        external 
-        nonReentrant 
-        whenNotPaused 
-        jobExists(_jobId) 
-        onlyClient(_jobId) 
-    {
-        Job storage job = jobs[_jobId];
-        require(!job.fundsDeposited, "Funds already deposited");
-        require(job.status == JobStatus.Active, "Job is not active");
+    function createMilestone(
+        uint256 _projectId,
+        uint256 _amount,
+        string memory _description,
+        uint256 _deadline
+    ) external onlyProjectParties(_projectId) returns (uint256) {
+        require(projects[_projectId].active, "Project not active");
+        require(_amount > 0, "Amount must be greater than 0");
+        require(_deadline > block.timestamp, "Deadline must be in future");
+
+        uint256 milestoneId = nextMilestoneId++;
         
-        IERC20 token = IERC20(job.paymentToken);
-        uint256 feeAmount = (job.totalAmount * job.platformFee) / 10000;
-        uint256 totalRequired = job.totalAmount + feeAmount;
-        
+        Milestone storage milestone = milestones[milestoneId];
+        milestone.id = milestoneId;
+        milestone.projectId = _projectId;
+        milestone.freelancer = projects[_projectId].freelancer;
+        milestone.client = projects[_projectId].client;
+        milestone.amount = _amount;
+        milestone.description = _description;
+        milestone.deadline = _deadline;
+        milestone.status = MilestoneStatus.Created;
+
+        projectMilestones[_projectId].push(milestoneId);
+
+        // Transfer funds to escrow
         require(
-            token.transferFrom(msg.sender, address(this), totalRequired),
-            "Failed to transfer funds"
+            paymentToken.transferFrom(milestone.client, address(this), _amount),
+            "Payment transfer failed"
         );
-        
-        job.fundsDeposited = true;
-        
-        emit FundsDeposited(_jobId, totalRequired);
+
+        emit MilestoneCreated(milestoneId, _projectId, _amount, _description);
+        return milestoneId;
     }
-    
+
     /**
-     * @dev Freelancer starts working on a milestone
-     * @param _jobId ID of the job
-     * @param _milestoneId ID of the milestone
-     */
-    function startMilestone(uint256 _jobId, uint256 _milestoneId)
-        external
-        whenNotPaused
-        jobExists(_jobId)
-        validMilestone(_jobId, _milestoneId)
-        onlyFreelancer(_jobId)
-    {
-        Job storage job = jobs[_jobId];
-        require(job.fundsDeposited, "Funds not deposited yet");
-        require(job.status == JobStatus.Active, "Job is not active");
-        
-        Milestone storage milestone = job.milestones[_milestoneId];
-        require(milestone.status == MilestoneStatus.Pending, "Milestone already started");
-        
-        milestone.status = MilestoneStatus.InProgress;
-        
-        emit MilestoneStarted(_jobId, _milestoneId, msg.sender);
-    }
-    
-    /**
-     * @dev Freelancer submits work for a milestone
-     * @param _jobId ID of the job
-     * @param _milestoneId ID of the milestone
-     * @param _submissionHash IPFS hash or URL of the submitted work
+     * @dev Submit milestone deliverable
      */
     function submitMilestone(
-        uint256 _jobId, 
-        uint256 _milestoneId, 
-        string memory _submissionHash
-    )
-        external
-        whenNotPaused
-        jobExists(_jobId)
-        validMilestone(_jobId, _milestoneId)
-        onlyFreelancer(_jobId)
-    {
-        Job storage job = jobs[_jobId];
-        require(job.status == JobStatus.Active, "Job is not active");
-        
-        Milestone storage milestone = job.milestones[_milestoneId];
-        require(
-            milestone.status == MilestoneStatus.InProgress,
-            "Milestone not in progress"
-        );
-        require(bytes(_submissionHash).length > 0, "Submission hash required");
-        
-        milestone.status = MilestoneStatus.Submitted;
-        milestone.submissionHash = _submissionHash;
-        milestone.submittedAt = block.timestamp;
-        
-        emit MilestoneSubmitted(_jobId, _milestoneId, _submissionHash);
-    }
-    
-    /**
-     * @dev Client approves a milestone and releases payment
-     * @param _jobId ID of the job
-     * @param _milestoneId ID of the milestone
-     */
-    function approveMilestone(uint256 _jobId, uint256 _milestoneId)
-        external
-        nonReentrant
-        whenNotPaused
-        jobExists(_jobId)
-        validMilestone(_jobId, _milestoneId)
-        onlyClient(_jobId)
-    {
-        Job storage job = jobs[_jobId];
-        require(job.status == JobStatus.Active, "Job is not active");
-        
-        Milestone storage milestone = job.milestones[_milestoneId];
-        require(
-            milestone.status == MilestoneStatus.Submitted,
-            "Milestone not submitted yet"
-        );
-        
-        milestone.status = MilestoneStatus.Approved;
-        milestone.approvedAt = block.timestamp;
-        
-        // Release payment to freelancer
-        _releaseMilestonePayment(_jobId, _milestoneId);
-        
-        emit MilestoneApproved(_jobId, _milestoneId, msg.sender);
-        
-        // Check if all milestones are completed
-        _checkJobCompletion(_jobId);
-    }
-    
-    /**
-     * @dev Raise a dispute for a milestone
-     * @param _jobId ID of the job
-     * @param _milestoneId ID of the milestone
-     * @param _reason Reason for the dispute
-     */
-    function raiseDispute(
-        uint256 _jobId,
         uint256 _milestoneId,
-        string memory _reason
-    )
-        external
-        whenNotPaused
-        jobExists(_jobId)
-        validMilestone(_jobId, _milestoneId)
-        onlyJobParticipant(_jobId)
-    {
-        Job storage job = jobs[_jobId];
-        require(job.status == JobStatus.Active, "Job is not active");
-        require(block.timestamp <= job.disputeDeadline, "Dispute window expired");
+        string memory _deliverableHash
+    ) external onlyFreelancer(_milestoneId) {
+        Milestone storage milestone = milestones[_milestoneId];
+        require(milestone.status == MilestoneStatus.Created, "Invalid milestone status");
+        require(block.timestamp <= milestone.deadline, "Deadline passed");
+        require(bytes(_deliverableHash).length > 0, "Deliverable hash required");
+
+        milestone.status = MilestoneStatus.Submitted;
+        milestone.deliverableHash = _deliverableHash;
+        milestone.submissionTime = block.timestamp;
+
+        emit MilestoneSubmitted(_milestoneId, _deliverableHash, block.timestamp);
+    }
+
+    /**
+     * @dev Approve milestone (client only)
+     */
+    function approveMilestone(uint256 _milestoneId) external onlyClient(_milestoneId) {
+        Milestone storage milestone = milestones[_milestoneId];
+        require(milestone.status == MilestoneStatus.Submitted, "Milestone not submitted");
+
+        milestone.status = MilestoneStatus.Approved;
+        milestone.approvalTime = block.timestamp;
+
+        emit MilestoneApproved(_milestoneId, block.timestamp);
         
-        Milestone storage milestone = job.milestones[_milestoneId];
+        // Process payment
+        _completeMilestone(_milestoneId);
+    }
+
+    /**
+     * @dev Auto-approve milestone after delay period
+     */
+    function autoApproveMilestone(uint256 _milestoneId) external {
+        Milestone storage milestone = milestones[_milestoneId];
+        require(milestone.status == MilestoneStatus.Submitted, "Milestone not submitted");
         require(
-            milestone.status == MilestoneStatus.Submitted ||
-            milestone.status == MilestoneStatus.InProgress,
+            block.timestamp >= milestone.submissionTime + autoApprovalDelay,
+            "Auto-approval delay not met"
+        );
+        require(disputes[_milestoneId].status == DisputeStatus.None, "Milestone disputed");
+
+        milestone.status = MilestoneStatus.Approved;
+        milestone.approvalTime = block.timestamp;
+
+        emit MilestoneApproved(_milestoneId, block.timestamp);
+        
+        // Process payment
+        _completeMilestone(_milestoneId);
+    }
+
+    /**
+     * @dev Raise a dispute
+     */
+    function raiseDispute(uint256 _milestoneId, string memory _reason) external onlyProjectParties(milestones[_milestoneId].projectId) {
+        Milestone storage milestone = milestones[_milestoneId];
+        require(
+            milestone.status == MilestoneStatus.Submitted || milestone.status == MilestoneStatus.Approved,
             "Invalid milestone status for dispute"
         );
-        
-        uint256 disputeId = disputeCounter++;
-        disputes[disputeId] = Dispute({
-            jobId: _jobId,
-            milestoneId: _milestoneId,
-            initiator: msg.sender,
-            reason: _reason,
-            resolved: false,
-            winner: address(0),
-            createdAt: block.timestamp
-        });
-        
-        milestone.status = MilestoneStatus.Disputed;
-        job.status = JobStatus.Disputed;
-        
-        emit DisputeRaised(disputeId, _jobId, _milestoneId, msg.sender);
-    }
-    
-    /**
-     * @dev Resolve a dispute (only dispute resolver can call)
-     * @param _disputeId ID of the dispute
-     * @param _winner Address of the winning party
-     */
-    function resolveDispute(uint256 _disputeId, address _winner)
-        external
-        nonReentrant
-        whenNotPaused
-    {
-        require(msg.sender == disputeResolver, "Only dispute resolver can resolve");
-        require(_disputeId < disputeCounter, "Dispute does not exist");
-        
-        Dispute storage dispute = disputes[_disputeId];
-        require(!dispute.resolved, "Dispute already resolved");
-        
-        Job storage job = jobs[dispute.jobId];
-        Milestone storage milestone = job.milestones[dispute.milestoneId];
-        
-        require(_winner == job.client || _winner == job.freelancer, "Invalid winner");
-        
-        dispute.resolved = true;
-        dispute.winner = _winner;
-        
-        if (_winner == job.freelancer) {
-            milestone.status = MilestoneStatus.Approved;
-            _releaseMilestonePayment(dispute.jobId, dispute.milestoneId);
-        } else {
-            milestone.status = MilestoneStatus.Cancelled;
-            // Funds remain in escrow for client to withdraw
-        }
-        
-        job.status = JobStatus.Active;
-        
-        emit DisputeResolved(_disputeId, _winner, milestone.amount);
-        
-        _checkJobCompletion(dispute.jobId);
-    }
-    
-    /**
-     * @dev Cancel job and refund client (only if no milestones started)
-     * @param _jobId ID of the job
-     */
-    function cancelJob(uint256 _jobId)
-        external
-        nonReentrant
-        whenNotPaused
-        jobExists(_jobId)
-        onlyClient(_jobId)
-    {
-        Job storage job = jobs[_jobId];
-        require(job.status == JobStatus.Active, "Job is not active");
-        require(job.fundsDeposited, "No funds to refund");
-        
-        // Check if any milestone has been started
-        for (uint256 i = 0; i < job.milestones.length; i++) {
+        require(disputes[_milestoneId].status == DisputeStatus.None, "Dispute already exists");
+        require(bytes(_reason).length > 0, "Reason required");
+
+        // Check dispute window for approved milestones
+        if (milestone.status == MilestoneStatus.Approved) {
             require(
-                job.milestones[i].status == MilestoneStatus.Pending,
-                "Cannot cancel job with started milestones"
+                block.timestamp <= milestone.approvalTime + disputeWindow,
+                "Dispute window expired"
             );
         }
+
+        milestone.status = MilestoneStatus.Disputed;
         
-        job.status = JobStatus.Cancelled;
-        
-        // Refund client
-        IERC20 token = IERC20(job.paymentToken);
-        uint256 feeAmount = (job.totalAmount * job.platformFee) / 10000;
-        uint256 refundAmount = job.totalAmount + feeAmount;
-        
-        require(token.transfer(job.client, refundAmount), "Refund failed");
-        
-        emit JobCancelled(_jobId);
+        Dispute storage dispute = disputes[_milestoneId];
+        dispute.milestoneId = _milestoneId;
+        dispute.initiator = msg.sender;
+        dispute.reason = _reason;
+        dispute.status = DisputeStatus.Raised;
+        dispute.createdAt = block.timestamp;
+
+        emit DisputeRaised(_milestoneId, msg.sender, _reason);
     }
-    
+
     /**
-     * @dev Internal function to release milestone payment
+     * @dev Resolve dispute (owner only)
      */
-    function _releaseMilestonePayment(uint256 _jobId, uint256 _milestoneId) internal {
-        Job storage job = jobs[_jobId];
-        Milestone storage milestone = job.milestones[_milestoneId];
-        
+    function resolveDispute(uint256 _milestoneId, bool _clientFavor) external onlyOwner {
+        Dispute storage dispute = disputes[_milestoneId];
+        require(dispute.status == DisputeStatus.Raised, "No active dispute");
+
+        Milestone storage milestone = milestones[_milestoneId];
+        dispute.status = DisputeStatus.Resolved;
+        dispute.resolvedAt = block.timestamp;
+        dispute.resolver = msg.sender;
+        dispute.clientFavor = _clientFavor;
+
+        if (_clientFavor) {
+            // Refund to client
+            milestone.status = MilestoneStatus.Cancelled;
+            require(
+                paymentToken.transfer(milestone.client, milestone.amount),
+                "Refund transfer failed"
+            );
+        } else {
+            // Pay freelancer
+            milestone.status = MilestoneStatus.Approved;
+            milestone.approvalTime = block.timestamp;
+            _completeMilestone(_milestoneId);
+        }
+
+        emit DisputeResolved(_milestoneId, msg.sender, _clientFavor);
+    }
+
+    /**
+     * @dev Internal function to complete milestone and process payment
+     */
+    function _completeMilestone(uint256 _milestoneId) internal {
+        Milestone storage milestone = milestones[_milestoneId];
+        require(milestone.status == MilestoneStatus.Approved, "Milestone not approved");
+
         milestone.status = MilestoneStatus.Completed;
-        
-        IERC20 token = IERC20(job.paymentToken);
-        uint256 feeAmount = (milestone.amount * job.platformFee) / 10000;
-        uint256 freelancerAmount = milestone.amount - feeAmount;
-        
-        require(token.transfer(job.freelancer, freelancerAmount), "Payment to freelancer failed");
-        require(token.transfer(feeRecipient, feeAmount), "Fee transfer failed");
-        
-        emit PaymentReleased(_jobId, _milestoneId, job.freelancer, freelancerAmount);
+
+        // Calculate platform fee
+        uint256 platformFeeAmount = (milestone.amount * projects[milestone.projectId].platformFee) / 10000;
+        uint256 freelancerPayment = milestone.amount - platformFeeAmount;
+
+        // Transfer payments
+        if (platformFeeAmount > 0) {
+            require(
+                paymentToken.transfer(platformWallet, platformFeeAmount),
+                "Platform fee transfer failed"
+            );
+        }
+
+        require(
+            paymentToken.transfer(milestone.freelancer, freelancerPayment),
+            "Freelancer payment failed"
+        );
+
+        emit MilestoneCompleted(_milestoneId, freelancerPayment, platformFeeAmount);
     }
-    
+
     /**
-     * @dev Internal function to check if job is completed
+     * @dev Cancel milestone (only if not submitted)
      */
-    function _checkJobCompletion(uint256 _jobId) internal {
-        Job storage job = jobs[_jobId];
-        
-        bool allCompleted = true;
-        for (uint256 i = 0; i < job.milestones.length; i++) {
-            if (job.milestones[i].status != MilestoneStatus.Completed &&
-                job.milestones[i].status != MilestoneStatus.Cancelled) {
-                allCompleted = false;
-                break;
-            }
-        }
-        
-        if (allCompleted) {
-            job.status = JobStatus.Completed;
-            emit JobCompleted(_jobId);
-        }
+    function cancelMilestone(uint256 _milestoneId) external onlyClient(_milestoneId) {
+        Milestone storage milestone = milestones[_milestoneId];
+        require(milestone.status == MilestoneStatus.Created, "Cannot cancel submitted milestone");
+
+        milestone.status = MilestoneStatus.Cancelled;
+
+        // Refund client
+        require(
+            paymentToken.transfer(milestone.client, milestone.amount),
+            "Refund transfer failed"
+        );
+
+        emit FundsWithdrawn(milestone.client, milestone.amount);
     }
-    
+
     // View functions
-    function getJob(uint256 _jobId) external view returns (Job memory) {
-        return jobs[_jobId];
+    function getProject(uint256 _projectId) external view returns (Project memory) {
+        return projects[_projectId];
     }
-    
-    function getMilestone(uint256 _jobId, uint256 _milestoneId) 
-        external 
-        view 
-        returns (Milestone memory) 
-    {
-        return jobs[_jobId].milestones[_milestoneId];
+
+    function getMilestone(uint256 _milestoneId) external view returns (Milestone memory) {
+        return milestones[_milestoneId];
     }
-    
-    function getClientJobs(address _client) external view returns (uint256[] memory) {
-        return clientJobs[_client];
+
+    function getDispute(uint256 _milestoneId) external view returns (Dispute memory) {
+        return disputes[_milestoneId];
     }
-    
-    function getFreelancerJobs(address _freelancer) external view returns (uint256[] memory) {
-        return freelancerJobs[_freelancer];
+
+    function getProjectMilestones(uint256 _projectId) external view returns (uint256[] memory) {
+        return projectMilestones[_projectId];
     }
-    
-    function getJobMilestonesCount(uint256 _jobId) external view returns (uint256) {
-        return jobs[_jobId].milestones.length;
+
+    function getClientProjects(address _client) external view returns (uint256[] memory) {
+        return clientProjects[_client];
     }
-    
+
+    function getFreelancerProjects(address _freelancer) external view returns (uint256[] memory) {
+        return freelancerProjects[_freelancer];
+    }
+
     // Admin functions
-    function setPlatformFee(uint256 _newFee) external onlyOwner {
-        require(_newFee <= 1000, "Fee cannot exceed 10%"); // Max 10%
+    function updatePlatformFee(uint256 _newFee) external onlyOwner {
+        require(_newFee <= 1000, "Fee too high"); // Max 10%
         defaultPlatformFee = _newFee;
     }
-    
-    function setFeeRecipient(address _newRecipient) external onlyOwner {
-        require(_newRecipient != address(0), "Invalid recipient");
-        feeRecipient = _newRecipient;
+
+    function updatePlatformWallet(address _newWallet) external onlyOwner {
+        require(_newWallet != address(0), "Invalid wallet address");
+        platformWallet = _newWallet;
     }
-    
-    function setDisputeResolver(address _newResolver) external onlyOwner {
-        require(_newResolver != address(0), "Invalid resolver");
-        disputeResolver = _newResolver;
-    }
-    
-    function setDisputeWindow(uint256 _newWindow) external onlyOwner {
-        require(_newWindow >= 1 days && _newWindow <= 30 days, "Invalid dispute window");
+
+    function updateDisputeWindow(uint256 _newWindow) external onlyOwner {
         disputeWindow = _newWindow;
     }
-    
-    function pause() external onlyOwner {
-        _pause();
-    }
-    
-    function unpause() external onlyOwner {
-        _unpause();
-    }
-    
-    // Emergency function to withdraw funds (only owner, only when paused)
-    function emergencyWithdraw(address _token, uint256 _amount) external onlyOwner whenPaused {
-        IERC20(_token).transfer(owner(), _amount);
+
+    function updateAutoApprovalDelay(uint256 _newDelay) external onlyOwner {
+        autoApprovalDelay = _newDelay;
     }
 }

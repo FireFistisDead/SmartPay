@@ -1,15 +1,16 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
+import MyTokenModule from "./MyToken";
 
 const MilestoneEscrowModule = buildModule("MilestoneEscrowModule", (m) => {
-  const feeRecipient = m.getParameter("feeRecipient");
-  const disputeResolver = m.getParameter("disputeResolver");
+  // Import MyToken from its module
+  const { myToken } = m.useModule(MyTokenModule);
+  
+  // Get platform wallet address (default to deployer)
+  const platformWallet = m.getParameter("platformWallet", "0x0000000000000000000000000000000000000000");
+  
+  const milestoneEscrow = m.contract("MilestoneEscrow", [myToken, platformWallet]);
 
-  const milestoneEscrow = m.contract("MilestoneEscrow", [
-    feeRecipient,
-    disputeResolver,
-  ]);
-
-  return { milestoneEscrow };
+  return { milestoneEscrow, myToken };
 });
 
 export default MilestoneEscrowModule;

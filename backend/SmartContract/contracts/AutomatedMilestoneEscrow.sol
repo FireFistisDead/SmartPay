@@ -1,631 +1,619 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import "./MyToken.sol";
+import "./IOffChainIntegration.sol";
 
-// Chainlink imports for automation and oracles
-interface AutomationCompatibleInterface {
-    function checkUpkeep(bytes calldata checkData) external returns (bool upkeepNeeded, bytes memory performData);
-    function performUpkeep(bytes calldata performData) external;
-}
+/**
+ * @title AutomatedMilestoneEscrow
+ * @dev Core escrow system with automated milestone verification
+ * @dev Features: Client verification, time-based auto-approval, comprehensive dispute system
+ */
+contract AutomatedMilestoneEscrow {
+    enum MilestoneStatus { Created, Submitted, Approved, Disputed, Completed, Cancelled }
+    enum DisputeStatus { None, Raised, UnderReview, Resolved }
+    enum VerificationMethod { ClientOnly, Oracle, Hybrid, OffChain }
 
-interface AggregatorV3Interface {
-    function latestRoundData() external view returns (
-        uint80 roundId,
-        int256 answer,
-        uint256 startedAt,
-        uint256 updatedAt,
-        uint80 answeredInRound
-    );
-}
-
-contract AutomatedMilestoneEscrow is ReentrancyGuard, Ownable, Pausable, AutomationCompatibleInterface {
-    
-    enum MilestoneStatus {
-        Pending,        // Milestone created but not started
-        InProgress,     // Freelancer is working on it
-        Submitted,      // Freelancer submitted work for review
-        AutoVerified,   // Automatically verified by oracle/system
-        ClientApproved, // Manually approved by client
-        Disputed,       // Either party raised a dispute
-        Completed,      // Payment released to freelancer
-        Cancelled       // Milestone cancelled, funds returned
-    }
-    
-    enum JobStatus {
-        Active,
-        Completed,
-        Cancelled,
-        Disputed
-    }
-    
-    enum VerificationMethod {
-        ClientOnly,     // Only client can approve
-        OracleOnly,     // Only oracle/automation can approve
-        Hybrid,         // Either client or oracle can approve
-        OffChainVerifier // Off-chain backend verifier
-    }
-    
     struct Milestone {
         uint256 id;
-        string description;
+        uint256 projectId;
+        address freelancer;
+        address client;
         uint256 amount;
+        string description;
+        string deliverableHash; // IPFS hash
         uint256 deadline;
         MilestoneStatus status;
-        string submissionHash; // IPFS hash or URL of submitted work
-        uint256 submittedAt;
-        uint256 approvedAt;
         VerificationMethod verificationMethod;
-        string verificationCriteria; // JSON string with criteria for automation
-        uint256 autoApprovalDelay; // Time delay before auto-approval (if applicable)
+        uint256 submissionTime;
+        uint256 approvalTime;
+        uint8 qualityScore; // 0-100
+        bool autoApprovalEnabled;
     }
-    
-    struct Job {
-        uint256 id;
-        address client;
-        address freelancer;
-        address paymentToken;
-        uint256 totalAmount;
-        uint256 platformFee; // Fee percentage (basis points: 250 = 2.5%)
-        JobStatus status;
-        uint256 createdAt;
-        uint256 disputeDeadline; // Deadline for raising disputes
-        bool fundsDeposited;
-        Milestone[] milestones;
-        string metadataHash; // IPFS hash for job metadata
-    }
-    
+
     struct Dispute {
-        uint256 jobId;
         uint256 milestoneId;
         address initiator;
         string reason;
-        bool resolved;
-        address winner; // address(0) if not resolved
+        DisputeStatus status;
         uint256 createdAt;
-        string evidenceHash; // IPFS hash for dispute evidence
+        uint256 resolvedAt;
+        address resolver;
+        bool clientFavor;
+        string resolution;
     }
-    
-    struct OffChainVerifier {
-        address verifierAddress;
-        string verifierName;
-        bool isActive;
-        uint256 reputation; // 0-100 scale
+
+    struct Project {
+        uint256 id;
+        address client;
+        address freelancer;
+        string title;
+        string description;
+        uint256 totalBudget;
+        uint256 completedBudget;
+        uint256 platformFee; // basis points
+        VerificationMethod defaultVerificationMethod;
+        bool active;
+        bool paused;
+        uint256 createdAt;
     }
-    
+
+    struct AutomationConfig {
+        bool enabled;
+        uint256 checkInterval; // seconds
+        uint256 autoApprovalDelay; // seconds
+        uint256 minQualityScore; // minimum score for auto-approval
+        uint256 lastCheckTime;
+    }
+
     // State variables
-    mapping(uint256 => Job) public jobs;
+    MyToken public paymentToken;
+    address public owner;
+    address public platformWallet;
+    address public automationRegistry;
+    
+    // Configuration
+    uint256 public defaultPlatformFee = 250; // 2.5%
+    uint256 public disputeWindow = 7 days;
+    uint256 public defaultAutoApprovalDelay = 14 days;
+    uint256 public minAutoApprovalScore = 80;
+    bool public paused = false;
+
+    // Counters
+    uint256 private nextProjectId = 1;
+    uint256 private nextMilestoneId = 1;
+
+    // Storage mappings
+    mapping(uint256 => Project) public projects;
+    mapping(uint256 => Milestone) public milestones;
     mapping(uint256 => Dispute) public disputes;
-    mapping(address => uint256[]) public clientJobs;
-    mapping(address => uint256[]) public freelancerJobs;
-    mapping(address => OffChainVerifier) public offChainVerifiers;
-    mapping(uint256 => mapping(uint256 => bool)) public pendingAutoApprovals; // jobId => milestoneId => pending
+    mapping(uint256 => uint256[]) public projectMilestones;
+    mapping(address => uint256[]) public clientProjects;
+    mapping(address => uint256[]) public freelancerProjects;
+    mapping(uint256 => AutomationConfig) public projectAutomation;
     
-    uint256 public jobCounter;
-    uint256 public disputeCounter;
-    uint256 public defaultPlatformFee = 250; // 2.5% in basis points
-    uint256 public disputeWindow = 7 days; // Time window to raise disputes
-    uint256 public defaultAutoApprovalDelay = 48 hours; // Default delay for auto-approval
-    address public feeRecipient;
-    address public disputeResolver; // Address authorized to resolve disputes
-    
-    // Oracle and automation
-    AggregatorV3Interface public priceFeed; // For USD price conversions if needed
-    uint256 public lastUpkeepTimestamp;
-    uint256 public upkeepInterval = 1 hours; // Check every hour
-    
+    // Automation tracking
+    uint256[] public automatedProjects;
+    mapping(uint256 => bool) public isProjectAutomated;
+
     // Events
-    event JobCreated(
-        uint256 indexed jobId,
-        address indexed client,
-        address indexed freelancer,
-        uint256 totalAmount,
-        uint256 milestonesCount,
-        string metadataHash
-    );
-    
-    event FundsDeposited(uint256 indexed jobId, uint256 amount);
-    
-    event MilestoneStarted(
-        uint256 indexed jobId,
-        uint256 indexed milestoneId,
-        address indexed freelancer
-    );
-    
-    event MilestoneSubmitted(
-        uint256 indexed jobId,
-        uint256 indexed milestoneId,
-        string submissionHash
-    );
-    
-    event MilestoneAutoApproved(
-        uint256 indexed jobId,
-        uint256 indexed milestoneId,
-        string reason
-    );
-    
-    event MilestoneClientApproved(
-        uint256 indexed jobId,
-        uint256 indexed milestoneId,
-        address indexed client
-    );
-    
-    event MilestoneOracleVerified(
-        uint256 indexed jobId,
-        uint256 indexed milestoneId,
-        address indexed oracle
-    );
-    
-    event PaymentReleased(
-        uint256 indexed jobId,
-        uint256 indexed milestoneId,
-        address indexed freelancer,
-        uint256 amount,
-        string approvalMethod
-    );
-    
-    event DisputeRaised(
-        uint256 indexed disputeId,
-        uint256 indexed jobId,
-        uint256 indexed milestoneId,
-        address initiator,
-        string evidenceHash
-    );
-    
-    event DisputeResolved(
-        uint256 indexed disputeId,
-        address indexed winner,
-        uint256 compensation
-    );
-    
-    event OffChainVerifierAdded(address indexed verifier, string name);
-    event OffChainVerifierUpdated(address indexed verifier, bool isActive, uint256 reputation);
-    
-    event JobCompleted(uint256 indexed jobId);
-    event JobCancelled(uint256 indexed jobId);
-    
+    event ProjectCreated(uint256 indexed projectId, address indexed client, address indexed freelancer, uint256 totalBudget);
+    event MilestoneCreated(uint256 indexed milestoneId, uint256 indexed projectId, uint256 amount, VerificationMethod verificationMethod);
+    event MilestoneSubmitted(uint256 indexed milestoneId, string deliverableHash, uint256 submissionTime);
+    event MilestoneApproved(uint256 indexed milestoneId, uint256 approvalTime, bool automated);
+    event MilestoneCompleted(uint256 indexed milestoneId, uint256 paymentAmount, uint256 platformFee);
+    event DisputeRaised(uint256 indexed milestoneId, address indexed initiator, string reason);
+    event DisputeResolved(uint256 indexed milestoneId, address indexed resolver, bool clientFavor, string resolution);
+    event AutomationConfigured(uint256 indexed projectId, bool enabled, uint256 checkInterval, uint256 autoApprovalDelay);
+    event AutomatedApproval(uint256 indexed milestoneId, uint8 qualityScore, uint256 timestamp);
+    event ContractPaused(bool paused);
+    event FundsWithdrawn(address indexed recipient, uint256 amount);
+
     // Modifiers
-    modifier onlyJobParticipant(uint256 _jobId) {
-        Job storage job = jobs[_jobId];
-        require(
-            msg.sender == job.client || msg.sender == job.freelancer,
-            "Not authorized for this job"
-        );
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
         _;
     }
-    
-    modifier onlyClient(uint256 _jobId) {
-        require(jobs[_jobId].client == msg.sender, "Only client can call this");
+
+    modifier whenNotPaused() {
+        require(!paused, "Contract paused");
         _;
     }
-    
-    modifier onlyFreelancer(uint256 _jobId) {
-        require(jobs[_jobId].freelancer == msg.sender, "Only freelancer can call this");
+
+    modifier onlyProjectParties(uint256 _projectId) {
+        Project memory project = projects[_projectId];
+        require(msg.sender == project.client || msg.sender == project.freelancer, "Not project party");
         _;
     }
-    
-    modifier onlyOffChainVerifier() {
-        require(offChainVerifiers[msg.sender].isActive, "Not an active off-chain verifier");
+
+    modifier onlyClient(uint256 _milestoneId) {
+        require(msg.sender == milestones[_milestoneId].client, "Not client");
         _;
     }
-    
-    modifier jobExists(uint256 _jobId) {
-        require(_jobId < jobCounter, "Job does not exist");
+
+    modifier onlyFreelancer(uint256 _milestoneId) {
+        require(msg.sender == milestones[_milestoneId].freelancer, "Not freelancer");
         _;
     }
-    
-    modifier validMilestone(uint256 _jobId, uint256 _milestoneId) {
-        require(_milestoneId < jobs[_jobId].milestones.length, "Invalid milestone ID");
+
+    modifier onlyAutomationRegistry() {
+        require(msg.sender == automationRegistry, "Not automation registry");
         _;
     }
-    
-    constructor(address _feeRecipient, address _disputeResolver, address _priceFeed) Ownable(msg.sender) {
-        feeRecipient = _feeRecipient;
-        disputeResolver = _disputeResolver;
-        priceFeed = AggregatorV3Interface(_priceFeed);
-        lastUpkeepTimestamp = block.timestamp;
-    }
-    
-    /**
-     * @dev Create a new job with automated milestone verification
-     */
-    function createJobWithAutomation(
-        address _freelancer,
+
+    // Constructor
+    constructor(
         address _paymentToken,
-        string[] memory _milestoneDescriptions,
-        uint256[] memory _milestoneAmounts,
-        uint256[] memory _milestoneDeadlines,
-        VerificationMethod[] memory _verificationMethods,
-        string[] memory _verificationCriteria,
-        uint256[] memory _autoApprovalDelays,
-        string memory _metadataHash
+        address _platformWallet,
+        address _automationRegistry
+    ) {
+        paymentToken = MyToken(_paymentToken);
+        owner = msg.sender;
+        platformWallet = _platformWallet;
+        automationRegistry = _automationRegistry;
+    }
+
+    // Reentrancy guard
+    bool private locked;
+    modifier nonReentrant() {
+        require(!locked, "Reentrant call");
+        locked = true;
+        _;
+        locked = false;
+    }
+
+    /**
+     * @dev Create a new project
+     */
+    function createProject(
+        address _freelancer,
+        string memory _title,
+        string memory _description,
+        uint256 _totalBudget,
+        VerificationMethod _defaultVerificationMethod
     ) external whenNotPaused returns (uint256) {
         require(_freelancer != address(0), "Invalid freelancer address");
-        require(_freelancer != msg.sender, "Client cannot be freelancer");
-        require(_paymentToken != address(0), "Invalid payment token");
-        require(_milestoneDescriptions.length > 0, "At least one milestone required");
-        require(
-            _milestoneDescriptions.length == _milestoneAmounts.length &&
-            _milestoneAmounts.length == _milestoneDeadlines.length &&
-            _milestoneDeadlines.length == _verificationMethods.length &&
-            _verificationMethods.length == _verificationCriteria.length &&
-            _verificationCriteria.length == _autoApprovalDelays.length,
-            "Milestone arrays length mismatch"
-        );
+        require(_freelancer != msg.sender, "Client and freelancer cannot be same");
+        require(_totalBudget > 0, "Budget must be greater than 0");
+
+        uint256 projectId = nextProjectId++;
         
-        uint256 jobId = jobCounter++;
-        Job storage newJob = jobs[jobId];
-        
-        newJob.id = jobId;
-        newJob.client = msg.sender;
-        newJob.freelancer = _freelancer;
-        newJob.paymentToken = _paymentToken;
-        newJob.platformFee = defaultPlatformFee;
-        newJob.status = JobStatus.Active;
-        newJob.createdAt = block.timestamp;
-        newJob.disputeDeadline = block.timestamp + disputeWindow;
-        newJob.metadataHash = _metadataHash;
-        
-        uint256 totalAmount = 0;
-        for (uint256 i = 0; i < _milestoneDescriptions.length; i++) {
-            require(_milestoneAmounts[i] > 0, "Milestone amount must be positive");
-            require(_milestoneDeadlines[i] > block.timestamp, "Deadline must be in future");
+        Project storage project = projects[projectId];
+        project.id = projectId;
+        project.client = msg.sender;
+        project.freelancer = _freelancer;
+        project.title = _title;
+        project.description = _description;
+        project.totalBudget = _totalBudget;
+        project.platformFee = defaultPlatformFee;
+        project.defaultVerificationMethod = _defaultVerificationMethod;
+        project.active = true;
+        project.createdAt = block.timestamp;
+
+        clientProjects[msg.sender].push(projectId);
+        freelancerProjects[_freelancer].push(projectId);
+
+        // Initialize automation config for client-only verification
+        if (_defaultVerificationMethod == VerificationMethod.ClientOnly) {
+            AutomationConfig storage automation = projectAutomation[projectId];
+            automation.enabled = true;
+            automation.checkInterval = 1 hours;
+            automation.autoApprovalDelay = defaultAutoApprovalDelay;
+            automation.minQualityScore = minAutoApprovalScore;
+            automation.lastCheckTime = block.timestamp;
             
-            newJob.milestones.push(Milestone({
-                id: i,
-                description: _milestoneDescriptions[i],
-                amount: _milestoneAmounts[i],
-                deadline: _milestoneDeadlines[i],
-                status: MilestoneStatus.Pending,
-                submissionHash: "",
-                submittedAt: 0,
-                approvedAt: 0,
-                verificationMethod: _verificationMethods[i],
-                verificationCriteria: _verificationCriteria[i],
-                autoApprovalDelay: _autoApprovalDelays[i] > 0 ? _autoApprovalDelays[i] : defaultAutoApprovalDelay
-            }));
+            automatedProjects.push(projectId);
+            isProjectAutomated[projectId] = true;
             
-            totalAmount += _milestoneAmounts[i];
+            emit AutomationConfigured(projectId, true, 1 hours, defaultAutoApprovalDelay);
         }
-        
-        newJob.totalAmount = totalAmount;
-        
-        clientJobs[msg.sender].push(jobId);
-        freelancerJobs[_freelancer].push(jobId);
-        
-        emit JobCreated(jobId, msg.sender, _freelancer, totalAmount, _milestoneDescriptions.length, _metadataHash);
-        
-        return jobId;
+
+        emit ProjectCreated(projectId, msg.sender, _freelancer, _totalBudget);
+        return projectId;
     }
-    
+
     /**
-     * @dev Freelancer submits work with automatic verification trigger
+     * @dev Create a milestone for a project
      */
-    function submitMilestoneWithAutoVerification(
-        uint256 _jobId, 
-        uint256 _milestoneId, 
-        string memory _submissionHash
-    )
-        external
-        whenNotPaused
-        jobExists(_jobId)
-        validMilestone(_jobId, _milestoneId)
-        onlyFreelancer(_jobId)
-    {
-        Job storage job = jobs[_jobId];
-        require(job.status == JobStatus.Active, "Job is not active");
+    function createMilestone(
+        uint256 _projectId,
+        uint256 _amount,
+        string memory _description,
+        uint256 _deadline,
+        bool _autoApprovalEnabled
+    ) external onlyProjectParties(_projectId) whenNotPaused returns (uint256) {
+        Project storage project = projects[_projectId];
+        require(project.active && !project.paused, "Project not active");
+        require(_amount > 0, "Amount must be greater than 0");
+        require(_deadline > block.timestamp, "Deadline must be in future");
+        require(project.completedBudget + _amount <= project.totalBudget, "Exceeds project budget");
+
+        uint256 milestoneId = nextMilestoneId++;
         
-        Milestone storage milestone = job.milestones[_milestoneId];
+        Milestone storage milestone = milestones[milestoneId];
+        milestone.id = milestoneId;
+        milestone.projectId = _projectId;
+        milestone.freelancer = project.freelancer;
+        milestone.client = project.client;
+        milestone.amount = _amount;
+        milestone.description = _description;
+        milestone.deadline = _deadline;
+        milestone.status = MilestoneStatus.Created;
+        milestone.verificationMethod = project.defaultVerificationMethod;
+        milestone.autoApprovalEnabled = _autoApprovalEnabled;
+
+        projectMilestones[_projectId].push(milestoneId);
+
+        // Transfer funds to escrow
         require(
-            milestone.status == MilestoneStatus.InProgress,
-            "Milestone not in progress"
+            paymentToken.transferFrom(milestone.client, address(this), _amount),
+            "Payment transfer failed"
         );
-        require(bytes(_submissionHash).length > 0, "Submission hash required");
-        
+
+        emit MilestoneCreated(milestoneId, _projectId, _amount, project.defaultVerificationMethod);
+        return milestoneId;
+    }
+
+    /**
+     * @dev Submit milestone deliverable
+     */
+    function submitMilestone(
+        uint256 _milestoneId,
+        string memory _deliverableHash
+    ) external onlyFreelancer(_milestoneId) whenNotPaused {
+        Milestone storage milestone = milestones[_milestoneId];
+        require(milestone.status == MilestoneStatus.Created, "Invalid milestone status");
+        require(block.timestamp <= milestone.deadline, "Deadline passed");
+        require(bytes(_deliverableHash).length > 0, "Deliverable hash required");
+
         milestone.status = MilestoneStatus.Submitted;
-        milestone.submissionHash = _submissionHash;
-        milestone.submittedAt = block.timestamp;
-        
-        // If oracle-only or hybrid verification, mark for auto-approval
-        if (milestone.verificationMethod == VerificationMethod.OracleOnly ||
-            milestone.verificationMethod == VerificationMethod.Hybrid) {
-            pendingAutoApprovals[_jobId][_milestoneId] = true;
-        }
-        
-        emit MilestoneSubmitted(_jobId, _milestoneId, _submissionHash);
+        milestone.deliverableHash = _deliverableHash;
+        milestone.submissionTime = block.timestamp;
+
+        emit MilestoneSubmitted(_milestoneId, _deliverableHash, block.timestamp);
     }
-    
+
     /**
-     * @dev Off-chain verifier approves milestone
+     * @dev Approve milestone (client only verification)
      */
-    function offChainVerifierApprove(
-        uint256 _jobId,
-        uint256 _milestoneId,
-        string memory _verificationReport
-    )
-        external
-        nonReentrant
-        whenNotPaused
-        jobExists(_jobId)
-        validMilestone(_jobId, _milestoneId)
-        onlyOffChainVerifier
-    {
-        Job storage job = jobs[_jobId];
-        Milestone storage milestone = job.milestones[_milestoneId];
-        
-        require(job.status == JobStatus.Active, "Job is not active");
+    function approveMilestone(uint256 _milestoneId) external onlyClient(_milestoneId) whenNotPaused nonReentrant {
+        Milestone storage milestone = milestones[_milestoneId];
         require(milestone.status == MilestoneStatus.Submitted, "Milestone not submitted");
+        require(milestone.verificationMethod == VerificationMethod.ClientOnly, "Not client-only verification");
+
+        milestone.status = MilestoneStatus.Approved;
+        milestone.approvalTime = block.timestamp;
+        milestone.qualityScore = 100; // Client approval assumes full quality
+
+        emit MilestoneApproved(_milestoneId, block.timestamp, false);
+        
+        // Process payment
+        _completeMilestone(_milestoneId);
+    }
+
+    /**
+     * @dev Auto-approve milestone after delay period (client-only)
+     */
+    function autoApproveMilestone(uint256 _milestoneId) external whenNotPaused nonReentrant {
+        Milestone storage milestone = milestones[_milestoneId];
+        require(milestone.status == MilestoneStatus.Submitted, "Milestone not submitted");
+        require(milestone.verificationMethod == VerificationMethod.ClientOnly, "Not client-only verification");
+        require(milestone.autoApprovalEnabled, "Auto-approval not enabled");
         require(
-            milestone.verificationMethod == VerificationMethod.OffChainVerifier ||
-            milestone.verificationMethod == VerificationMethod.Hybrid,
-            "Invalid verification method for off-chain verifier"
+            block.timestamp >= milestone.submissionTime + defaultAutoApprovalDelay,
+            "Auto-approval delay not met"
         );
+        require(disputes[_milestoneId].status == DisputeStatus.None, "Milestone disputed");
+
+        milestone.status = MilestoneStatus.Approved;
+        milestone.approvalTime = block.timestamp;
+        milestone.qualityScore = uint8(minAutoApprovalScore); // Default score for auto-approval
+
+        emit MilestoneApproved(_milestoneId, block.timestamp, true);
+        emit AutomatedApproval(_milestoneId, milestone.qualityScore, block.timestamp);
         
-        milestone.status = MilestoneStatus.AutoVerified;
-        milestone.approvedAt = block.timestamp;
-        
-        _releaseMilestonePayment(_jobId, _milestoneId, "OffChainVerifier");
-        
-        emit MilestoneOracleVerified(_jobId, _milestoneId, msg.sender);
-        _checkJobCompletion(_jobId);
+        // Process payment
+        _completeMilestone(_milestoneId);
     }
-    
+
     /**
-     * @dev Chainlink Automation upkeep check
+     * @dev Batch auto-approve eligible milestones
      */
-    function checkUpkeep(bytes calldata) external view override returns (bool upkeepNeeded, bytes memory performData) {
-        upkeepNeeded = (block.timestamp - lastUpkeepTimestamp) > upkeepInterval;
-        
-        if (upkeepNeeded) {
-            // Find milestones ready for auto-approval
-            uint256[] memory readyJobs = new uint256[](100); // Max 100 jobs to process
-            uint256[] memory readyMilestones = new uint256[](100);
-            uint256 count = 0;
+    function batchAutoApprove(uint256[] calldata _milestoneIds) external whenNotPaused {
+        for (uint256 i = 0; i < _milestoneIds.length; i++) {
+            uint256 milestoneId = _milestoneIds[i];
+            Milestone storage milestone = milestones[milestoneId];
             
-            for (uint256 jobId = 0; jobId < jobCounter && count < 100; jobId++) {
-                Job storage job = jobs[jobId];
-                if (job.status == JobStatus.Active) {
-                    for (uint256 milestoneId = 0; milestoneId < job.milestones.length && count < 100; milestoneId++) {
-                        Milestone storage milestone = job.milestones[milestoneId];
-                        
-                        if (pendingAutoApprovals[jobId][milestoneId] &&
-                            milestone.status == MilestoneStatus.Submitted &&
-                            block.timestamp >= milestone.submittedAt + milestone.autoApprovalDelay) {
-                            
-                            readyJobs[count] = jobId;
-                            readyMilestones[count] = milestoneId;
-                            count++;
-                        }
-                    }
-                }
-            }
-            
-            if (count > 0) {
-                // Trim arrays to actual size
-                uint256[] memory jobsToProcess = new uint256[](count);
-                uint256[] memory milestonesToProcess = new uint256[](count);
+            if (
+                milestone.status == MilestoneStatus.Submitted &&
+                milestone.verificationMethod == VerificationMethod.ClientOnly &&
+                milestone.autoApprovalEnabled &&
+                block.timestamp >= milestone.submissionTime + defaultAutoApprovalDelay &&
+                disputes[milestoneId].status == DisputeStatus.None
+            ) {
+                milestone.status = MilestoneStatus.Approved;
+                milestone.approvalTime = block.timestamp;
+                milestone.qualityScore = uint8(minAutoApprovalScore);
+
+                emit MilestoneApproved(milestoneId, block.timestamp, true);
+                emit AutomatedApproval(milestoneId, milestone.qualityScore, block.timestamp);
                 
-                for (uint256 i = 0; i < count; i++) {
-                    jobsToProcess[i] = readyJobs[i];
-                    milestonesToProcess[i] = readyMilestones[i];
-                }
-                
-                performData = abi.encode(jobsToProcess, milestonesToProcess);
+                _completeMilestone(milestoneId);
             }
         }
     }
-    
+
     /**
-     * @dev Chainlink Automation upkeep execution
+     * @dev Raise a dispute
      */
-    function performUpkeep(bytes calldata performData) external override {
-        lastUpkeepTimestamp = block.timestamp;
-        
-        if (performData.length > 0) {
-            (uint256[] memory jobIds, uint256[] memory milestoneIds) = abi.decode(performData, (uint256[], uint256[]));
-            
-            for (uint256 i = 0; i < jobIds.length; i++) {
-                uint256 jobId = jobIds[i];
-                uint256 milestoneId = milestoneIds[i];
-                
-                if (pendingAutoApprovals[jobId][milestoneId]) {
-                    _autoApproveMilestone(jobId, milestoneId);
-                }
-            }
-        }
-    }
-    
-    /**
-     * @dev Internal function to auto-approve milestone
-     */
-    function _autoApproveMilestone(uint256 _jobId, uint256 _milestoneId) internal {
-        Job storage job = jobs[_jobId];
-        Milestone storage milestone = job.milestones[_milestoneId];
-        
-        if (milestone.status == MilestoneStatus.Submitted &&
-            block.timestamp >= milestone.submittedAt + milestone.autoApprovalDelay) {
-            
-            milestone.status = MilestoneStatus.AutoVerified;
-            milestone.approvedAt = block.timestamp;
-            pendingAutoApprovals[_jobId][_milestoneId] = false;
-            
-            _releaseMilestonePayment(_jobId, _milestoneId, "AutoApproval");
-            
-            emit MilestoneAutoApproved(_jobId, _milestoneId, "Time-based auto-approval");
-            _checkJobCompletion(_jobId);
-        }
-    }
-    
-    /**
-     * @dev Add off-chain verifier
-     */
-    function addOffChainVerifier(
-        address _verifier,
-        string memory _name,
-        uint256 _reputation
-    ) external onlyOwner {
-        require(_verifier != address(0), "Invalid verifier address");
-        require(_reputation <= 100, "Reputation must be 0-100");
-        
-        offChainVerifiers[_verifier] = OffChainVerifier({
-            verifierAddress: _verifier,
-            verifierName: _name,
-            isActive: true,
-            reputation: _reputation
-        });
-        
-        emit OffChainVerifierAdded(_verifier, _name);
-    }
-    
-    /**
-     * @dev Update off-chain verifier status
-     */
-    function updateOffChainVerifier(
-        address _verifier,
-        bool _isActive,
-        uint256 _reputation
-    ) external onlyOwner {
-        require(_reputation <= 100, "Reputation must be 0-100");
-        
-        OffChainVerifier storage verifier = offChainVerifiers[_verifier];
-        verifier.isActive = _isActive;
-        verifier.reputation = _reputation;
-        
-        emit OffChainVerifierUpdated(_verifier, _isActive, _reputation);
-    }
-    
-    /**
-     * @dev Enhanced dispute with evidence
-     */
-    function raiseDisputeWithEvidence(
-        uint256 _jobId,
-        uint256 _milestoneId,
-        string memory _reason,
-        string memory _evidenceHash
-    )
-        external
-        whenNotPaused
-        jobExists(_jobId)
-        validMilestone(_jobId, _milestoneId)
-        onlyJobParticipant(_jobId)
-    {
-        Job storage job = jobs[_jobId];
-        require(job.status == JobStatus.Active, "Job is not active");
-        require(block.timestamp <= job.disputeDeadline, "Dispute window expired");
-        
-        Milestone storage milestone = job.milestones[_milestoneId];
+    function raiseDispute(uint256 _milestoneId, string memory _reason) external onlyProjectParties(milestones[_milestoneId].projectId) whenNotPaused {
+        Milestone storage milestone = milestones[_milestoneId];
         require(
-            milestone.status == MilestoneStatus.Submitted ||
-            milestone.status == MilestoneStatus.InProgress ||
-            milestone.status == MilestoneStatus.AutoVerified,
+            milestone.status == MilestoneStatus.Submitted || milestone.status == MilestoneStatus.Approved,
             "Invalid milestone status for dispute"
         );
-        
-        uint256 disputeId = disputeCounter++;
-        disputes[disputeId] = Dispute({
-            jobId: _jobId,
-            milestoneId: _milestoneId,
-            initiator: msg.sender,
-            reason: _reason,
-            resolved: false,
-            winner: address(0),
-            createdAt: block.timestamp,
-            evidenceHash: _evidenceHash
-        });
-        
+        require(disputes[_milestoneId].status == DisputeStatus.None, "Dispute already exists");
+        require(bytes(_reason).length > 0, "Reason required");
+
+        // Check dispute window for approved milestones
+        if (milestone.status == MilestoneStatus.Approved) {
+            require(
+                block.timestamp <= milestone.approvalTime + disputeWindow,
+                "Dispute window expired"
+            );
+        }
+
         milestone.status = MilestoneStatus.Disputed;
-        job.status = JobStatus.Disputed;
         
-        // Cancel pending auto-approval
-        pendingAutoApprovals[_jobId][_milestoneId] = false;
-        
-        emit DisputeRaised(disputeId, _jobId, _milestoneId, msg.sender, _evidenceHash);
+        Dispute storage dispute = disputes[_milestoneId];
+        dispute.milestoneId = _milestoneId;
+        dispute.initiator = msg.sender;
+        dispute.reason = _reason;
+        dispute.status = DisputeStatus.Raised;
+        dispute.createdAt = block.timestamp;
+
+        emit DisputeRaised(_milestoneId, msg.sender, _reason);
     }
-    
+
     /**
-     * @dev Internal function to release milestone payment with method tracking
+     * @dev Resolve dispute (owner only)
      */
-    function _releaseMilestonePayment(uint256 _jobId, uint256 _milestoneId, string memory _approvalMethod) internal {
-        Job storage job = jobs[_jobId];
-        Milestone storage milestone = job.milestones[_milestoneId];
-        
+    function resolveDispute(
+        uint256 _milestoneId,
+        bool _clientFavor,
+        string memory _resolution
+    ) external onlyOwner whenNotPaused nonReentrant {
+        Dispute storage dispute = disputes[_milestoneId];
+        require(dispute.status == DisputeStatus.Raised, "No active dispute");
+
+        Milestone storage milestone = milestones[_milestoneId];
+        dispute.status = DisputeStatus.Resolved;
+        dispute.resolvedAt = block.timestamp;
+        dispute.resolver = msg.sender;
+        dispute.clientFavor = _clientFavor;
+        dispute.resolution = _resolution;
+
+        if (_clientFavor) {
+            // Refund to client
+            milestone.status = MilestoneStatus.Cancelled;
+            require(
+                paymentToken.transfer(milestone.client, milestone.amount),
+                "Refund transfer failed"
+            );
+            emit FundsWithdrawn(milestone.client, milestone.amount);
+        } else {
+            // Pay freelancer
+            milestone.status = MilestoneStatus.Approved;
+            milestone.approvalTime = block.timestamp;
+            milestone.qualityScore = 100; // Assume full quality when dispute resolved in freelancer's favor
+            _completeMilestone(_milestoneId);
+        }
+
+        emit DisputeResolved(_milestoneId, msg.sender, _clientFavor, _resolution);
+    }
+
+    /**
+     * @dev Internal function to complete milestone and process payment
+     */
+    function _completeMilestone(uint256 _milestoneId) internal {
+        Milestone storage milestone = milestones[_milestoneId];
+        require(milestone.status == MilestoneStatus.Approved, "Milestone not approved");
+
         milestone.status = MilestoneStatus.Completed;
-        
-        IERC20 token = IERC20(job.paymentToken);
-        uint256 feeAmount = (milestone.amount * job.platformFee) / 10000;
-        uint256 freelancerAmount = milestone.amount - feeAmount;
-        
-        require(token.transfer(job.freelancer, freelancerAmount), "Payment to freelancer failed");
-        require(token.transfer(feeRecipient, feeAmount), "Fee transfer failed");
-        
-        emit PaymentReleased(_jobId, _milestoneId, job.freelancer, freelancerAmount, _approvalMethod);
+
+        // Update project completed budget
+        Project storage project = projects[milestone.projectId];
+        project.completedBudget += milestone.amount;
+
+        // Calculate platform fee
+        uint256 platformFeeAmount = (milestone.amount * project.platformFee) / 10000;
+        uint256 freelancerPayment = milestone.amount - platformFeeAmount;
+
+        // Transfer payments
+        if (platformFeeAmount > 0) {
+            require(
+                paymentToken.transfer(platformWallet, platformFeeAmount),
+                "Platform fee transfer failed"
+            );
+        }
+
+        require(
+            paymentToken.transfer(milestone.freelancer, freelancerPayment),
+            "Freelancer payment failed"
+        );
+
+        emit MilestoneCompleted(_milestoneId, freelancerPayment, platformFeeAmount);
     }
-    
+
     /**
-     * @dev Internal function to check if job is completed
+     * @dev Cancel milestone (only if not submitted)
      */
-    function _checkJobCompletion(uint256 _jobId) internal {
-        Job storage job = jobs[_jobId];
+    function cancelMilestone(uint256 _milestoneId) external onlyClient(_milestoneId) whenNotPaused nonReentrant {
+        Milestone storage milestone = milestones[_milestoneId];
+        require(milestone.status == MilestoneStatus.Created, "Cannot cancel submitted milestone");
+
+        milestone.status = MilestoneStatus.Cancelled;
+
+        // Refund client
+        require(
+            paymentToken.transfer(milestone.client, milestone.amount),
+            "Refund transfer failed"
+        );
+
+        emit FundsWithdrawn(milestone.client, milestone.amount);
+    }
+
+    /**
+     * @dev Configure automation for a project
+     */
+    function configureAutomation(
+        uint256 _projectId,
+        bool _enabled,
+        uint256 _checkInterval,
+        uint256 _autoApprovalDelay,
+        uint256 _minQualityScore
+    ) external onlyProjectParties(_projectId) whenNotPaused {
+        require(projects[_projectId].defaultVerificationMethod == VerificationMethod.ClientOnly, "Only for client-only verification");
         
-        bool allCompleted = true;
-        for (uint256 i = 0; i < job.milestones.length; i++) {
-            if (job.milestones[i].status != MilestoneStatus.Completed &&
-                job.milestones[i].status != MilestoneStatus.Cancelled) {
-                allCompleted = false;
-                break;
+        AutomationConfig storage automation = projectAutomation[_projectId];
+        automation.enabled = _enabled;
+        automation.checkInterval = _checkInterval;
+        automation.autoApprovalDelay = _autoApprovalDelay;
+        automation.minQualityScore = _minQualityScore;
+        automation.lastCheckTime = block.timestamp;
+
+        if (_enabled && !isProjectAutomated[_projectId]) {
+            automatedProjects.push(_projectId);
+            isProjectAutomated[_projectId] = true;
+        }
+
+        emit AutomationConfigured(_projectId, _enabled, _checkInterval, _autoApprovalDelay);
+    }
+
+    /**
+     * @dev Pause/unpause project
+     */
+    function pauseProject(uint256 _projectId, bool _paused) external onlyProjectParties(_projectId) {
+        projects[_projectId].paused = _paused;
+    }
+
+    /**
+     * @dev Get milestones eligible for auto-approval
+     */
+    function getEligibleMilestones() external view returns (uint256[] memory) {
+        uint256[] memory eligible = new uint256[](1000); // Temporary array
+        uint256 count = 0;
+
+        for (uint256 i = 1; i < nextMilestoneId && count < 1000; i++) {
+            Milestone memory milestone = milestones[i];
+            if (
+                milestone.status == MilestoneStatus.Submitted &&
+                milestone.verificationMethod == VerificationMethod.ClientOnly &&
+                milestone.autoApprovalEnabled &&
+                block.timestamp >= milestone.submissionTime + defaultAutoApprovalDelay &&
+                disputes[i].status == DisputeStatus.None
+            ) {
+                eligible[count] = i;
+                count++;
             }
         }
-        
-        if (allCompleted) {
-            job.status = JobStatus.Completed;
-            emit JobCompleted(_jobId);
+
+        // Create properly sized array
+        uint256[] memory result = new uint256[](count);
+        for (uint256 i = 0; i < count; i++) {
+            result[i] = eligible[i];
         }
+
+        return result;
     }
-    
-    // View functions (keeping existing ones and adding new)
-    function getJob(uint256 _jobId) external view returns (Job memory) {
-        return jobs[_jobId];
+
+    // View functions
+    function getProject(uint256 _projectId) external view returns (Project memory) {
+        return projects[_projectId];
     }
-    
-    function getMilestone(uint256 _jobId, uint256 _milestoneId) 
-        external 
-        view 
-        returns (Milestone memory) 
-    {
-        return jobs[_jobId].milestones[_milestoneId];
+
+    function getMilestone(uint256 _milestoneId) external view returns (Milestone memory) {
+        return milestones[_milestoneId];
     }
-    
-    function isPendingAutoApproval(uint256 _jobId, uint256 _milestoneId) 
-        external 
-        view 
-        returns (bool) 
-    {
-        return pendingAutoApprovals[_jobId][_milestoneId];
+
+    function getDispute(uint256 _milestoneId) external view returns (Dispute memory) {
+        return disputes[_milestoneId];
     }
-    
-    function getOffChainVerifier(address _verifier) 
-        external 
-        view 
-        returns (OffChainVerifier memory) 
-    {
-        return offChainVerifiers[_verifier];
+
+    function getProjectMilestones(uint256 _projectId) external view returns (uint256[] memory) {
+        return projectMilestones[_projectId];
     }
-    
+
+    function getClientProjects(address _client) external view returns (uint256[] memory) {
+        return clientProjects[_client];
+    }
+
+    function getFreelancerProjects(address _freelancer) external view returns (uint256[] memory) {
+        return freelancerProjects[_freelancer];
+    }
+
+    function getAutomatedProjects() external view returns (uint256[] memory) {
+        return automatedProjects;
+    }
+
+    function getProjectAutomation(uint256 _projectId) external view returns (AutomationConfig memory) {
+        return projectAutomation[_projectId];
+    }
+
     // Admin functions
-    function setUpkeepInterval(uint256 _newInterval) external onlyOwner {
-        require(_newInterval >= 10 minutes, "Interval too short");
-        upkeepInterval = _newInterval;
+    function updatePlatformFee(uint256 _newFee) external onlyOwner {
+        require(_newFee <= 1000, "Fee too high"); // Max 10%
+        defaultPlatformFee = _newFee;
     }
-    
-    function setDefaultAutoApprovalDelay(uint256 _newDelay) external onlyOwner {
-        require(_newDelay >= 1 hours, "Delay too short");
+
+    function updatePlatformWallet(address _newWallet) external onlyOwner {
+        require(_newWallet != address(0), "Invalid wallet address");
+        platformWallet = _newWallet;
+    }
+
+    function updateDisputeWindow(uint256 _newWindow) external onlyOwner {
+        disputeWindow = _newWindow;
+    }
+
+    function updateAutoApprovalDelay(uint256 _newDelay) external onlyOwner {
         defaultAutoApprovalDelay = _newDelay;
     }
-    
-    function setPriceFeed(address _newPriceFeed) external onlyOwner {
-        priceFeed = AggregatorV3Interface(_newPriceFeed);
+
+    function updateMinAutoApprovalScore(uint256 _newScore) external onlyOwner {
+        require(_newScore <= 100, "Score too high");
+        minAutoApprovalScore = _newScore;
+    }
+
+    function setPaused(bool _paused) external onlyOwner {
+        paused = _paused;
+        emit ContractPaused(_paused);
+    }
+
+    function updateAutomationRegistry(address _newRegistry) external onlyOwner {
+        automationRegistry = _newRegistry;
+    }
+
+    // Emergency functions
+    function emergencyWithdraw(address _token, uint256 _amount) external onlyOwner {
+        MyToken token = MyToken(_token);
+        require(token.transfer(owner, _amount), "Emergency withdraw failed");
+    }
+
+    // Gas optimization: Pack multiple milestone checks in one call
+    function checkMultipleMilestones(uint256[] calldata _milestoneIds) external view returns (bool[] memory canAutoApprove) {
+        canAutoApprove = new bool[](_milestoneIds.length);
+        
+        for (uint256 i = 0; i < _milestoneIds.length; i++) {
+            uint256 milestoneId = _milestoneIds[i];
+            Milestone memory milestone = milestones[milestoneId];
+            
+            canAutoApprove[i] = (
+                milestone.status == MilestoneStatus.Submitted &&
+                milestone.verificationMethod == VerificationMethod.ClientOnly &&
+                milestone.autoApprovalEnabled &&
+                block.timestamp >= milestone.submissionTime + defaultAutoApprovalDelay &&
+                disputes[milestoneId].status == DisputeStatus.None
+            );
+        }
     }
 }
