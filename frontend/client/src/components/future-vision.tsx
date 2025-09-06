@@ -36,7 +36,7 @@ const visionItems = [
 
 export default function FutureVision() {
   return (
-    <section id="benefits" className="py-20 relative overflow-hidden blockchain-grid">
+    <section id="future-vision" className="py-20 relative overflow-hidden blockchain-grid">
       <div className="absolute inset-0 blockchain-grid opacity-5"></div>
       
       <div className="container mx-auto px-6 relative z-10">
