@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wallet, Users, Briefcase, ArrowRight } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Wallet, Users, Briefcase, ArrowRight, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import ParticleBackground from "@/components/particle-background";
 
 const FloatingIcon = ({ icon, className, delay = 0 }: { icon: React.ReactNode; className: string; delay?: number }) => (
@@ -27,12 +28,22 @@ const FloatingIcon = ({ icon, className, delay = 0 }: { icon: React.ReactNode; c
   </motion.div>
 );
 
-export default function Login() {
+export default function Signup() {
   const [, setLocation] = useLocation();
   const [selectedRole, setSelectedRole] = useState<"client" | "freelancer" | null>(null);
   const [activeTab, setActiveTab] = useState("role");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
 
   useEffect(() => {
     // Check for role parameter in URL
@@ -41,35 +52,61 @@ export default function Login() {
     
     if (roleParam === 'client' || roleParam === 'freelancer') {
       setSelectedRole(roleParam);
-      setActiveTab("wallet"); // Automatically switch to wallet tab
+      setActiveTab("details"); // Automatically switch to details tab
     }
   }, []);
 
-  const handleLogin = (role: "client" | "freelancer") => {
-    setIsLoading(true);
-    // Simulate a brief loading state for better UX
-    setTimeout(() => {
-      // For now, just redirect to dashboard
-      // In production, this would handle SmartPay connection and authentication
-      localStorage.setItem("userRole", role);
-      setLocation("/dashboard");
-    }, 1000);
-  };
-
-  const handleTabChange = (newTab: string) => {
-    if (newTab === "wallet" && !selectedRole) {
-      setErrorMessage("Choose a Role to login/register");
-      // Clear error message after 3 seconds
+  const handleSignup = (role: "client" | "freelancer") => {
+    if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword) {
+      setErrorMessage("Please fill in all fields");
       setTimeout(() => setErrorMessage(""), 3000);
       return;
     }
-    setErrorMessage(""); // Clear any existing error
+
+    if (formData.password !== formData.confirmPassword) {
+      setErrorMessage("Passwords do not match");
+      setTimeout(() => setErrorMessage(""), 3000);
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setErrorMessage("Password must be at least 8 characters long");
+      setTimeout(() => setErrorMessage(""), 3000);
+      return;
+    }
+
+    if (!agreedToTerms) {
+      setErrorMessage("Please agree to the Terms of Service and Privacy Policy");
+      setTimeout(() => setErrorMessage(""), 3000);
+      return;
+    }
+
+    setIsLoading(true);
+    // Simulate account creation process
+    setTimeout(() => {
+      // In production, this would handle actual account creation
+      localStorage.setItem("userRole", role);
+      setLocation("/dashboard");
+    }, 2000);
+  };
+
+  const handleTabChange = (newTab: string) => {
+    if (newTab === "details" && !selectedRole) {
+      setErrorMessage("Choose a Role to continue");
+      setTimeout(() => setErrorMessage(""), 3000);
+      return;
+    }
+    setErrorMessage("");
     setActiveTab(newTab);
   };
 
   const handleRoleSelection = (role: "client" | "freelancer") => {
     setSelectedRole(role);
-    setErrorMessage(""); // Clear any error when role is selected
+    setErrorMessage("");
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -136,12 +173,12 @@ export default function Login() {
           </motion.div>
           <motion.h1 
             className="text-xl font-bold mb-2" 
-            data-testid="text-login-title"
+            data-testid="text-signup-title"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            Welcome to the Future of Work
+            Join the Future of Work
           </motion.h1>
           <motion.p 
             className="text-sm text-muted-foreground"
@@ -149,15 +186,15 @@ export default function Login() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
-            Connect your SmartPay and choose your role to get started
+            Create your account and start your decentralized freelance journey
           </motion.p>
         </div>
 
         <Card className="glass-morphism border-border/50">
           <CardHeader className="pb-4 pt-6">
-            <CardTitle className="text-lg">Login / Sign Up</CardTitle>
+            <CardTitle className="text-lg">Create Account</CardTitle>
             <CardDescription className="text-sm">
-              Choose your role and connect to start earning or hiring
+              Choose your role and create your SmartPay account
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0 pb-6">
@@ -174,7 +211,7 @@ export default function Login() {
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-4">
                 <TabsTrigger value="role" data-testid="tab-role" className="text-sm">Choose Role</TabsTrigger>
-                <TabsTrigger value="wallet" data-testid="tab-wallet" className="text-sm">Connect SmartPay</TabsTrigger>
+                <TabsTrigger value="details" data-testid="tab-details" className="text-sm">Account Details</TabsTrigger>
               </TabsList>
               
               <TabsContent value="role" className="space-y-3">
@@ -248,53 +285,134 @@ export default function Login() {
                     className="mt-4"
                   >
                     <Button
-                      onClick={() => setActiveTab("wallet")}
+                      onClick={() => setActiveTab("details")}
                       className="w-full py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-lg text-sm font-semibold hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
                     >
-                      Continue to Connect SmartPay
+                      Continue to Account Details
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
                   </motion.div>
                 )}
               </TabsContent>
               
-              <TabsContent value="wallet" className="space-y-4">
+              <TabsContent value="details" className="space-y-4">
                 <div className="space-y-3">
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
                   >
-                    <Label htmlFor="email" className="text-sm">Email Address</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      placeholder="Enter your email"
-                      data-testid="input-email"
-                      className="mt-1 h-9"
-                    />
+                    <Label htmlFor="fullName" className="text-sm">Full Name</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input 
+                        id="fullName" 
+                        type="text" 
+                        placeholder="Enter your full name"
+                        data-testid="input-fullname"
+                        className="mt-1 h-9 pl-10"
+                        value={formData.fullName}
+                        onChange={(e) => handleInputChange("fullName", e.target.value)}
+                      />
+                    </div>
                   </motion.div>
+
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                  >
+                    <Label htmlFor="email" className="text-sm">Email Address</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        placeholder="Enter your email"
+                        data-testid="input-email"
+                        className="mt-1 h-9 pl-10"
+                        value={formData.email}
+                        onChange={(e) => handleInputChange("email", e.target.value)}
+                      />
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5, delay: 0.4 }}
                   >
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="password" className="text-sm">Password</Label>
-                      <Link 
-                        href="/forgot-password" 
-                        className="text-xs text-primary hover:underline"
+                    <Label htmlFor="password" className="text-sm">Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input 
+                        id="password" 
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Create a strong password"
+                        data-testid="input-password"
+                        className="mt-1 h-9 pl-10 pr-10"
+                        value={formData.password}
+                        onChange={(e) => handleInputChange("password", e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       >
-                        Forgot password?
-                      </Link>
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
-                    <Input 
-                      id="password" 
-                      type="password" 
-                      placeholder="Enter your password"
-                      data-testid="input-password"
-                      className="mt-1 h-9"
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.5 }}
+                  >
+                    <Label htmlFor="confirmPassword" className="text-sm">Confirm Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input 
+                        id="confirmPassword" 
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirm your password"
+                        data-testid="input-confirm-password"
+                        className="mt-1 h-9 pl-10 pr-10"
+                        value={formData.confirmPassword}
+                        onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.6 }}
+                    className="flex items-center space-x-2"
+                  >
+                    <Checkbox 
+                      id="terms" 
+                      checked={agreedToTerms}
+                      onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+                      data-testid="checkbox-terms"
                     />
+                    <Label htmlFor="terms" className="text-xs text-muted-foreground">
+                      I agree to the{" "}
+                      <Link href="/terms" className="text-primary hover:underline">
+                        Terms of Service
+                      </Link>{" "}
+                      and{" "}
+                      <Link href="/privacy" className="text-primary hover:underline">
+                        Privacy Policy
+                      </Link>
+                    </Label>
                   </motion.div>
                 </div>
 
@@ -302,26 +420,16 @@ export default function Login() {
                   className="space-y-3"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.6 }}
+                  transition={{ duration: 0.5, delay: 0.7 }}
                 >
                   <Button 
                     className="w-full bg-gradient-to-r from-primary to-secondary h-10 text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                     disabled={!selectedRole || isLoading}
-                    onClick={() => selectedRole && handleLogin(selectedRole)}
-                    data-testid="button-connect-wallet"
+                    onClick={() => selectedRole && handleSignup(selectedRole)}
+                    data-testid="button-create-account"
                   >
                     <Wallet className="mr-2 h-4 w-4" />
-                    {isLoading ? "Connecting..." : "Connect SmartPay & Continue"}
-                  </Button>
-
-                  <Button 
-                    variant="outline" 
-                    className="w-full glass-morphism h-10 text-sm font-semibold hover:bg-primary/10 transition-all duration-300 hover:scale-105"
-                    disabled={!selectedRole || isLoading}
-                    onClick={() => selectedRole && handleLogin(selectedRole)}
-                    data-testid="button-email-login"
-                  >
-                    {isLoading ? "Processing..." : "Continue with Email"}
+                    {isLoading ? "Creating Account..." : "Create Account & Connect SmartPay"}
                   </Button>
                 </motion.div>
 
@@ -332,9 +440,9 @@ export default function Login() {
                   transition={{ duration: 0.5, delay: 0.8 }}
                 >
                   <p>
-                    Don't have an account?{" "}
-                    <Link href="/signup" className="text-primary hover:underline">
-                      Sign up here
+                    Already have an account?{" "}
+                    <Link href="/login" className="text-primary hover:underline">
+                      Sign in here
                     </Link>
                   </p>
                 </motion.div>
@@ -345,14 +453,7 @@ export default function Login() {
 
         <div className="mt-4 text-center text-xs text-muted-foreground">
           <p>
-            By continuing, you agree to our{" "}
-            <Link href="/terms" className="text-primary hover:underline">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link href="/privacy" className="text-primary hover:underline">
-              Privacy Policy
-            </Link>
+            Secure, transparent, and decentralized freelance platform powered by blockchain technology
           </p>
         </div>
       </motion.div>
