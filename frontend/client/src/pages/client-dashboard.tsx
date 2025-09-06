@@ -140,7 +140,8 @@ const ProjectCard = ({
   status,
   dueDate,
   rating,
-  category
+  category,
+  setLocation
 }: { 
   title: string; 
   freelancer: string; 
@@ -151,6 +152,7 @@ const ProjectCard = ({
   dueDate: string;
   rating?: number;
   category?: string;
+  setLocation: (path: string) => void;
 }) => (
   <motion.div
     whileHover={{ scale: 1.01, y: -2 }}
@@ -211,10 +213,10 @@ const ProjectCard = ({
             <span className="text-sm text-muted-foreground">Due: {dueDate}</span>
           </div>
           <div className="flex space-x-2">
-            <Button size="sm" variant="outline" className="h-8 px-3">
+            <Button size="sm" variant="outline" className="h-8 px-3" onClick={() => setLocation("/messages-disputes")}>
               <MessageSquare className="w-4 h-4" />
             </Button>
-            <Button size="sm" className="h-8 px-3">
+            <Button size="sm" className="h-8 px-3" onClick={() => setLocation("/my-projects")}>
               View Details
             </Button>
           </div>
@@ -448,14 +450,14 @@ export default function ClientDashboard() {
                 />
               </div>
               
-              <Button variant="ghost" size="sm" className="relative">
+              <Button variant="ghost" size="sm" className="relative" onClick={() => setLocation("/notifications")}>
                 <Bell className="h-5 w-5" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full flex items-center justify-center">
                   <span className="text-xs text-white">3</span>
                 </span>
               </Button>
               
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={() => setLocation("/profile-settings")}>
                 <Settings className="h-5 w-5" />
               </Button>
               
@@ -513,9 +515,17 @@ export default function ClientDashboard() {
                     <Lock className="mr-3 h-4 w-4" />
                     Payments & Escrow
                   </Button>
-                  <Button variant="ghost" className="w-full justify-start text-sm">
+                  <Button variant="ghost" className="w-full justify-start text-sm" onClick={() => setLocation("/messages-disputes")}>
                     <MessageSquare className="mr-3 h-4 w-4" />
                     Messages & Disputes
+                  </Button>
+                  <Button variant="ghost" className="w-full justify-start text-sm" onClick={() => setLocation("/analytics")}>
+                    <BarChart3 className="mr-3 h-4 w-4" />
+                    Analytics
+                  </Button>
+                  <Button variant="ghost" className="w-full justify-start text-sm" onClick={() => setLocation("/help-support")}>
+                    <FileText className="mr-3 h-4 w-4" />
+                    Help & Support
                   </Button>
                 </nav>
               </CardContent>
@@ -534,11 +544,28 @@ export default function ClientDashboard() {
                   <Plus className="mr-2 h-4 w-4" />
                   New Project
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" onClick={() => setLocation("/find-freelancers")}>
                   <Users className="mr-2 h-4 w-4" />
                   Hire Talent
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" onClick={() => {
+                  // Export functionality - could be implemented to export project data as CSV/PDF
+                  const projectData = {
+                    totalProjects: 12,
+                    activeProjects: 8,
+                    completedProjects: 4,
+                    totalBudget: "$45,230",
+                    exportDate: new Date().toISOString().split('T')[0]
+                  };
+                  
+                  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2));
+                  const downloadAnchorNode = document.createElement('a');
+                  downloadAnchorNode.setAttribute("href", dataStr);
+                  downloadAnchorNode.setAttribute("download", `smartpay-dashboard-export-${projectData.exportDate}.json`);
+                  document.body.appendChild(downloadAnchorNode);
+                  downloadAnchorNode.click();
+                  downloadAnchorNode.remove();
+                }}>
                   <Download className="mr-2 h-4 w-4" />
                   Export Data
                 </Button>
@@ -663,7 +690,7 @@ export default function ClientDashboard() {
                     <h2 className="text-2xl font-bold">
                       Active Projects
                     </h2>
-                    <Button variant="outline" className="space-x-2">
+                    <Button variant="outline" className="space-x-2" onClick={() => setLocation("/my-projects")}>
                       <Eye className="h-4 w-4" />
                       <span>View All</span>
                     </Button>
@@ -732,6 +759,7 @@ export default function ClientDashboard() {
                           dueDate={project.dueDate}
                           rating={project.rating}
                           category={project.category}
+                          setLocation={setLocation}
                         />
                       </motion.div>
                     ))}
@@ -795,11 +823,11 @@ export default function ClientDashboard() {
                             </div>
                             
                             <div className="flex space-x-2">
-                              <Button size="sm" variant="outline" className="flex-1">
+                              <Button size="sm" variant="outline" className="flex-1" onClick={() => setLocation("/messages-disputes")}>
                                 <MessageSquare className="w-4 h-4 mr-2" />
                                 Message
                               </Button>
-                              <Button size="sm" className="flex-1">
+                              <Button size="sm" className="flex-1" onClick={() => setLocation("/create-project")}>
                                 Hire Now
                               </Button>
                             </div>
@@ -866,109 +894,25 @@ export default function ClientDashboard() {
                 <TabsContent value="analytics" className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-bold">Analytics & Insights</h2>
-                    <Button variant="outline">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      Last 30 Days
+                    <Button onClick={() => setLocation("/analytics")} className="bg-gradient-to-r from-primary to-secondary">
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      View Full Analytics
                     </Button>
                   </div>
                   
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Platform Benefits */}
-                    <Card className="glass-morphism border-border/50">
-                      <CardHeader>
-                        <CardTitle className="flex items-center space-x-2">
-                          <Shield className="w-6 h-6 text-primary" />
-                          <span>Why SmartPay?</span>
-                        </CardTitle>
-                        <CardDescription>
-                          Benefits of using our decentralized platform
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {[
-                          { icon: <Shield className="w-5 h-5 text-primary" />, title: "Trust & Security", desc: "Smart contracts ensure automatic payments" },
-                          { icon: <Zap className="w-5 h-5 text-secondary" />, title: "Automation", desc: "No manual intervention needed for payments" },
-                          { icon: <Lock className="w-5 h-5 text-green-400" />, title: "Escrow Protection", desc: "Funds secured until milestones completed" },
-                          { icon: <Eye className="w-5 h-5 text-accent" />, title: "Transparency", desc: "All transactions recorded on blockchain" }
-                        ].map((feature, index) => (
-                          <motion.div
-                            key={feature.title}
-                            className="flex items-start space-x-3 p-3 rounded-lg hover:bg-muted/20 transition-colors"
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={calculateAnimationConfig({ duration: 0.5, delay: 0.2 + index * 0.1 })}
-                          >
-                            <div className="mt-0.5">{feature.icon}</div>
-                            <div>
-                              <h4 className="font-medium mb-1">{feature.title}</h4>
-                              <p className="text-sm text-muted-foreground">{feature.desc}</p>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </CardContent>
-                    </Card>
-
-                    {/* Success Metrics */}
-                    <Card className="glass-morphism border-border/50">
-                      <CardHeader>
-                        <CardTitle className="flex items-center space-x-2">
-                          <TrendingUp className="w-6 h-6 text-green-400" />
-                          <span>Your Success Metrics</span>
-                        </CardTitle>
-                        <CardDescription>
-                          Track your performance and growth
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-6">
-                        <div className="space-y-4">
-                          <div>
-                            <div className="flex justify-between mb-2">
-                              <span className="text-sm text-muted-foreground">Project Success Rate</span>
-                              <span className="text-sm font-medium">97.3%</span>
-                            </div>
-                            <Progress value={97.3} className="h-2" />
-                          </div>
-                          
-                          <div>
-                            <div className="flex justify-between mb-2">
-                              <span className="text-sm text-muted-foreground">Budget Efficiency</span>
-                              <span className="text-sm font-medium">94.8%</span>
-                            </div>
-                            <Progress value={94.8} className="h-2" />
-                          </div>
-                          
-                          <div>
-                            <div className="flex justify-between mb-2">
-                              <span className="text-sm text-muted-foreground">Freelancer Satisfaction</span>
-                              <span className="text-sm font-medium">4.7/5.0</span>
-                            </div>
-                            <Progress value={94} className="h-2" />
-                          </div>
-                          
-                          <div>
-                            <div className="flex justify-between mb-2">
-                              <span className="text-sm text-muted-foreground">Dispute Resolution</span>
-                              <span className="text-sm font-medium">92.1%</span>
-                            </div>
-                            <Progress value={92.1} className="h-2" />
-                          </div>
-                        </div>
-                        
-                        <div className="pt-4 border-t border-border/50">
-                          <div className="grid grid-cols-2 gap-4 text-center">
-                            <div>
-                              <p className="text-2xl font-bold gradient-text">147</p>
-                              <p className="text-sm text-muted-foreground">Projects Completed</p>
-                            </div>
-                            <div>
-                              <p className="text-2xl font-bold gradient-text">4.7</p>
-                              <p className="text-sm text-muted-foreground">Avg. Rating</p>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+                  <Card className="glass-morphism border-border/50">
+                    <CardContent className="p-8 text-center">
+                      <BarChart3 className="w-16 h-16 text-primary mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold mb-2">Detailed Analytics Available</h3>
+                      <p className="text-muted-foreground mb-6">
+                        View comprehensive analytics including spending patterns, project performance, 
+                        freelancer statistics, and more insights on the dedicated analytics page.
+                      </p>
+                      <Button onClick={() => setLocation("/analytics")} className="bg-gradient-to-r from-primary to-secondary">
+                        Go to Analytics Dashboard
+                      </Button>
+                    </CardContent>
+                  </Card>
                 </TabsContent>
               </Tabs>
             </motion.div>
