@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export default function HackathonContext() {
   return (
-    <section className="py-20 blockchain-grid">
+    <section id="about" className="py-20 blockchain-grid">
       <div className="container mx-auto px-4">
         <motion.div 
           className="text-center mb-16"

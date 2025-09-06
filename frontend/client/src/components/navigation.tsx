@@ -48,11 +48,11 @@ export default function Navigation() {
               How It Works
             </button>
             <button
-              onClick={() => scrollToSection('benefits')}
+              onClick={() => scrollToSection('about')}
               className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              data-testid="nav-benefits"
+              data-testid="nav-about"
             >
-              Benefits
+              About
             </button>
             <button
               onClick={() => scrollToSection('features')}
@@ -107,11 +107,11 @@ export default function Navigation() {
               How It Works
             </button>
             <button
-              onClick={() => scrollToSection('benefits')}
+              onClick={() => scrollToSection('about')}
               className="block w-full text-left text-muted-foreground hover:text-foreground transition-colors py-2"
-              data-testid="nav-mobile-benefits"
+              data-testid="nav-mobile-about"
             >
-              Benefits
+              About
             </button>
             <button
               onClick={() => scrollToSection('features')}
