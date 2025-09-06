@@ -2,190 +2,31 @@ const express = require('express');
 const router = express.Router();
 const advancedController = require('../controllers/advancedController');
 const { authenticate } = require('../middleware/auth');
-const RBACService = require('../services/rbacService');
 
-// Initialize RBAC service for middleware
-const rbacService = new RBACService();
+// RBAC service will be available through middleware auth
+let rbacService = null;
 
-// Authentication middleware for all routes
-router.use(authenticate);
-
-/**
- * Multi-signature Routes
- * @route /api/advanced/multisig
- */
-router.post('/multisig/propose', 
-  rbacService.requirePermission('multisig:propose'),
-  advancedController.proposeMultiSigTransaction
-);
-
-router.post('/multisig/:proposalId/sign',
-  rbacService.requirePermission('multisig:sign'),
-  advancedController.signMultiSigProposal
-);
-
-router.post('/multisig/:proposalId/execute',
-  rbacService.requirePermission('multisig:execute'),
-  advancedController.executeMultiSigProposal
-);
-
-router.get('/multisig/:proposalId',
-  rbacService.requirePermission('multisig:propose'),
-  advancedController.getMultiSigProposal
-);
-
-router.get('/multisig',
-  rbacService.requirePermission('multisig:propose'),
-  advancedController.listMultiSigProposals
-);
-
-router.delete('/multisig/:proposalId',
-  rbacService.requirePermission('multisig:propose'),
-  advancedController.cancelMultiSigProposal
-);
+// Get RBAC service when needed (lazy loading)
+function getRBACService() {
+  if (!rbacService) {
+    try {
+      const serviceManager = require('../services/ServiceManager');
+      if (serviceManager.hasService('RBACService')) {
+        rbacService = serviceManager.getExistingService('RBACService');
+      } else {
+        // Fallback to singleton
+        const RBACService = require('../services/rbacService');
+        rbacService = RBACService.getInstance();
+      }
+    } catch (error) {
+      console.warn('Could not get RBAC service:', error.message);
+    }
+  }
+  return rbacService;
+}
 
 /**
- * Automated Payment Routes
- * @route /api/advanced/automation
- */
-router.post('/automation/rules',
-  rbacService.requirePermission('automation:create'),
-  advancedController.createAutomationRule
-);
-
-router.get('/automation/jobs/:jobId/status',
-  rbacService.requirePermission('automation:read', { allowOwner: true, resourceParam: 'jobId' }),
-  advancedController.getAutomationStatus
-);
-
-router.post('/automation/schedule',
-  rbacService.requirePermission('automation:create'),
-  advancedController.schedulePaymentRelease
-);
-
-router.post('/automation/check',
-  rbacService.requireRole(['admin', 'super_admin']),
-  advancedController.checkAutomatedPayments
-);
-
-router.post('/automation/execute',
-  rbacService.requirePermission('automation:manage'),
-  advancedController.executeAutomaticPayment
-);
-
-/**
- * Advanced Analytics Routes
- * @route /api/advanced/analytics
- */
-router.get('/analytics/platform',
-  rbacService.requirePermission('analytics:read'),
-  advancedController.getPlatformAnalytics
-);
-
-router.post('/analytics/predict/project-success',
-  rbacService.requirePermission('analytics:read'),
-  advancedController.predictProjectSuccess
-);
-
-router.post('/analytics/analyze/payment-risk',
-  rbacService.requirePermission('analytics:read'),
-  advancedController.analyzePaymentRisk
-);
-
-router.get('/analytics/forecast/token-price',
-  rbacService.requirePermission('analytics:read'),
-  advancedController.forecastTokenPrice
-);
-
-router.get('/analytics/users/:userId/behavior',
-  rbacService.requirePermission('analytics:read', { allowOwner: true, resourceParam: 'userId' }),
-  advancedController.analyzeUserBehavior
-);
-
-router.get('/analytics/market-insights',
-  rbacService.requirePermission('analytics:read'),
-  advancedController.getMarketInsights
-);
-
-router.get('/analytics/dashboard/realtime',
-  rbacService.requirePermission('analytics:read'),
-  advancedController.getRealTimeDashboard
-);
-
-/**
- * RBAC Management Routes
- * @route /api/advanced/rbac
- */
-router.post('/rbac/users/:userId/roles',
-  rbacService.requirePermission('users:manage'),
-  advancedController.assignRole
-);
-
-router.delete('/rbac/users/:userId/roles',
-  rbacService.requirePermission('users:manage'),
-  advancedController.removeRole
-);
-
-router.post('/rbac/permissions',
-  rbacService.requireRole(['super_admin']),
-  advancedController.createPermission
-);
-
-router.post('/rbac/roles',
-  rbacService.requireRole(['super_admin']),
-  advancedController.createRole
-);
-
-router.get('/rbac/users/:userId/permissions',
-  rbacService.requirePermission('users:read', { allowOwner: true, resourceParam: 'userId' }),
-  advancedController.getUserPermissions
-);
-
-router.get('/rbac/roles',
-  rbacService.requirePermission('users:read'),
-  advancedController.getAllRoles
-);
-
-router.get('/rbac/permissions',
-  rbacService.requirePermission('users:read'),
-  advancedController.getAllPermissions
-);
-
-/**
- * Security Routes
- * @route /api/advanced/security
- */
-router.get('/security/report',
-  rbacService.requireRole(['admin', 'super_admin']),
-  advancedController.getSecurityReport
-);
-
-router.post('/security/validate',
-  rbacService.requirePermission('users:read'),
-  advancedController.validateInput
-);
-
-router.post('/security/password/strength',
-  advancedController.checkPasswordStrength
-);
-
-router.post('/security/encrypt',
-  rbacService.requirePermission('system:admin'),
-  advancedController.encryptData
-);
-
-router.post('/security/decrypt',
-  rbacService.requirePermission('system:admin'),
-  advancedController.decryptData
-);
-
-router.get('/security/token/generate',
-  rbacService.requirePermission('system:admin'),
-  advancedController.generateSecureToken
-);
-
-/**
- * Health Check for Advanced Features
+ * Health Check for Advanced Features (Public endpoint)
  */
 router.get('/health', async (req, res) => {
   try {
@@ -214,11 +55,374 @@ router.get('/health', async (req, res) => {
   }
 });
 
+// Authentication middleware for all other routes
+router.use(authenticate);
+
+/**
+ * Multi-signature Routes
+ * @route /api/advanced/multisig
+ */
+router.post('/multisig/propose', 
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('multisig:propose')(req, res, next);
+    }
+    next();
+  },
+  advancedController.proposeMultiSigTransaction
+);
+
+router.post('/multisig/:proposalId/sign',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('multisig:sign')(req, res, next);
+    }
+    next();
+  },
+  advancedController.signMultiSigProposal
+);
+
+router.post('/multisig/:proposalId/execute',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('multisig:execute')(req, res, next);
+    }
+    next();
+  },
+  advancedController.executeMultiSigProposal
+);
+
+router.get('/multisig/:proposalId',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('multisig:propose')(req, res, next);
+    }
+    next();
+  },
+  advancedController.getMultiSigProposal
+);
+
+router.get('/multisig',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('multisig:propose')(req, res, next);
+    }
+    next();
+  },
+  advancedController.listMultiSigProposals
+);
+
+router.delete('/multisig/:proposalId',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('multisig:propose')(req, res, next);
+    }
+    next();
+  },
+  advancedController.cancelMultiSigProposal
+);
+
+/**
+ * Automated Payment Routes
+ * @route /api/advanced/automation
+ */
+router.post('/automation/rules',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('automation:create')(req, res, next);
+    }
+    next();
+  },
+  advancedController.createAutomationRule
+);
+
+router.get('/automation/jobs/:jobId/status',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('automation:read', { allowOwner: true, resourceParam: 'jobId' })(req, res, next);
+    }
+    next();
+  },
+  advancedController.getAutomationStatus
+);
+
+router.post('/automation/schedule',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('automation:create')(req, res, next);
+    }
+    next();
+  },
+  advancedController.schedulePaymentRelease
+);
+
+router.post('/automation/check',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requireRole) {
+      return rbac.requireRole(['admin', 'super_admin'])(req, res, next);
+    }
+    next();
+  },
+  advancedController.checkAutomatedPayments
+);
+
+router.post('/automation/execute',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('automation:manage')(req, res, next);
+    }
+    next();
+  },
+  advancedController.executeAutomaticPayment
+);
+
+/**
+ * Advanced Analytics Routes
+ * @route /api/advanced/analytics
+ */
+router.get('/analytics/platform',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('analytics:read')(req, res, next);
+    }
+    next();
+  },
+  advancedController.getPlatformAnalytics
+);
+
+router.post('/analytics/predict/project-success',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('analytics:read')(req, res, next);
+    }
+    next();
+  },
+  advancedController.predictProjectSuccess
+);
+
+router.post('/analytics/analyze/payment-risk',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('analytics:read')(req, res, next);
+    }
+    next();
+  },
+  advancedController.analyzePaymentRisk
+);
+
+router.get('/analytics/forecast/token-price',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('analytics:read')(req, res, next);
+    }
+    next();
+  },
+  advancedController.forecastTokenPrice
+);
+
+router.get('/analytics/users/:userId/behavior',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('analytics:read', { allowOwner: true, resourceParam: 'userId' })(req, res, next);
+    }
+    next();
+  },
+  advancedController.analyzeUserBehavior
+);
+
+router.get('/analytics/market-insights',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('analytics:read')(req, res, next);
+    }
+    next();
+  },
+  advancedController.getMarketInsights
+);
+
+router.get('/analytics/dashboard/realtime',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('analytics:read')(req, res, next);
+    }
+    next();
+  },
+  advancedController.getRealTimeDashboard
+);
+
+/**
+ * RBAC Management Routes
+ * @route /api/advanced/rbac
+ */
+router.post('/rbac/users/:userId/roles',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('users:manage')(req, res, next);
+    }
+    next();
+  },
+  advancedController.assignRole
+);
+
+router.delete('/rbac/users/:userId/roles',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('users:manage')(req, res, next);
+    }
+    next();
+  },
+  advancedController.removeRole
+);
+
+router.post('/rbac/permissions',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requireRole) {
+      return rbac.requireRole(['super_admin'])(req, res, next);
+    }
+    next();
+  },
+  advancedController.createPermission
+);
+
+router.post('/rbac/roles',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requireRole) {
+      return rbac.requireRole(['super_admin'])(req, res, next);
+    }
+    next();
+  },
+  advancedController.createRole
+);
+
+router.get('/rbac/users/:userId/permissions',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('users:read', { allowOwner: true, resourceParam: 'userId' })(req, res, next);
+    }
+    next();
+  },
+  advancedController.getUserPermissions
+);
+
+router.get('/rbac/roles',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('users:read')(req, res, next);
+    }
+    next();
+  },
+  advancedController.getAllRoles
+);
+
+router.get('/rbac/permissions',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('users:read')(req, res, next);
+    }
+    next();
+  },
+  advancedController.getAllPermissions
+);
+
+/**
+ * Security Routes
+ * @route /api/advanced/security
+ */
+router.get('/security/report',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requireRole) {
+      return rbac.requireRole(['admin', 'super_admin'])(req, res, next);
+    }
+    next();
+  },
+  advancedController.getSecurityReport
+);
+
+router.post('/security/validate',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('users:read')(req, res, next);
+    }
+    next();
+  },
+  advancedController.validateInput
+);
+
+router.post('/security/password/strength',
+  advancedController.checkPasswordStrength
+);
+
+router.post('/security/encrypt',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('system:admin')(req, res, next);
+    }
+    next();
+  },
+  advancedController.encryptData
+);
+
+router.post('/security/decrypt',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('system:admin')(req, res, next);
+    }
+    next();
+  },
+  advancedController.decryptData
+);
+
+router.get('/security/token/generate',
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('system:admin')(req, res, next);
+    }
+    next();
+  },
+  advancedController.generateSecureToken
+);
+
 /**
  * Feature Discovery Endpoint
  */
 router.get('/features', 
-  rbacService.requirePermission('users:read'),
+  (req, res, next) => {
+    const rbac = getRBACService();
+    if (rbac && rbac.requirePermission) {
+      return rbac.requirePermission('users:read')(req, res, next);
+    }
+    next();
+  },
   async (req, res) => {
     try {
       const features = {

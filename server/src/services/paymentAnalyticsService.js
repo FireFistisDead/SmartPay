@@ -1,7 +1,6 @@
 const Job = require('../models/Job');
 const User = require('../models/User');
 const Event = require('../models/Event');
-const PaymentService = require('./paymentService');
 const PriceOracleService = require('./priceOracleService');
 const logger = require('../utils/logger');
 const { AppError } = require('../middleware/errorHandler');
@@ -12,7 +11,7 @@ const redisClient = require('../config/redis');
  */
 class PaymentAnalyticsService {
   constructor() {
-    this.paymentService = new PaymentService();
+    this.paymentService = null; // Will be set via ServiceManager
     this.priceOracleService = new PriceOracleService();
     this.cachePrefix = 'payment_analytics:';
     this.defaultCacheDuration = 300; // 5 minutes

@@ -10,10 +10,17 @@ const { AppError } = require('../middleware/errorHandler');
  */
 class RBACService {
   constructor() {
+    // Singleton pattern to prevent duplicates
+    if (RBACService.instance) {
+      return RBACService.instance;
+    }
+    
     this.initialized = false;
     this.permissions = new Map();
     this.roles = new Map();
     this.cachePrefix = 'rbac:';
+    
+    RBACService.instance = this;
     
     // Define system permissions
     this.systemPermissions = {
@@ -722,18 +729,30 @@ class RBACService {
 
   async _loadCustomPermissions() {
     try {
-      // Load custom permissions from Redis cache first
-      const cached = await redisClient.get(`${this.cachePrefix}custom_permissions`);
-      if (cached) {
-        return JSON.parse(cached);
+      // Load custom permissions from Redis cache first if available
+      if (redisClient && redisClient.isConnected) {
+        try {
+          const cached = await redisClient.get(`${this.cachePrefix}custom_permissions`);
+          if (cached) {
+            return JSON.parse(cached);
+          }
+        } catch (cacheError) {
+          logger.warn('Failed to get cached custom permissions:', cacheError.message);
+        }
       }
 
       // In a production environment, this would load from database
       // For now, return empty array as custom permissions can be added dynamically
       const customPermissions = [];
       
-      // Cache the result
-      await redisClient.setex(`${this.cachePrefix}custom_permissions`, 3600, JSON.stringify(customPermissions));
+      // Cache the result if Redis is available
+      if (redisClient && redisClient.isConnected) {
+        try {
+          await redisClient.setex(`${this.cachePrefix}custom_permissions`, 3600, JSON.stringify(customPermissions));
+        } catch (cacheError) {
+          logger.warn('Failed to cache custom permissions:', cacheError.message);
+        }
+      }
       
       return customPermissions;
     } catch (error) {
@@ -744,18 +763,30 @@ class RBACService {
 
   async _loadCustomRoles() {
     try {
-      // Load custom roles from Redis cache first
-      const cached = await redisClient.get(`${this.cachePrefix}custom_roles`);
-      if (cached) {
-        return JSON.parse(cached);
+      // Load custom roles from Redis cache first if available
+      if (redisClient && redisClient.isConnected) {
+        try {
+          const cached = await redisClient.get(`${this.cachePrefix}custom_roles`);
+          if (cached) {
+            return JSON.parse(cached);
+          }
+        } catch (cacheError) {
+          logger.warn('Failed to get cached custom roles:', cacheError.message);
+        }
       }
 
       // In a production environment, this would load from database
       // For now, return empty array as custom roles can be added dynamically
       const customRoles = [];
       
-      // Cache the result
-      await redisClient.setex(`${this.cachePrefix}custom_roles`, 3600, JSON.stringify(customRoles));
+      // Cache the result if Redis is available
+      if (redisClient && redisClient.isConnected) {
+        try {
+          await redisClient.setex(`${this.cachePrefix}custom_roles`, 3600, JSON.stringify(customRoles));
+        } catch (cacheError) {
+          logger.warn('Failed to cache custom roles:', cacheError.message);
+        }
+      }
       
       return customRoles;
     } catch (error) {

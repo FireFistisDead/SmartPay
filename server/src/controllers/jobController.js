@@ -5,11 +5,10 @@ const logger = require('../utils/logger');
 const { AppError } = require('../middleware/errorHandler');
 const { ValidationUtils, FormatUtils } = require('../utils/helpers');
 const redisClient = require('../config/redis');
-const ContractService = require('../services/contractService');
 
 class JobController {
   constructor() {
-    this.contractService = new ContractService();
+    this.contractService = null; // Will be set via ServiceManager
   }
 
   /**

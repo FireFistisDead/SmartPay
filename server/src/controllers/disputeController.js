@@ -2,12 +2,30 @@ const Job = require('../models/Job');
 const User = require('../models/User');
 const { AppError } = require('../middleware/errorHandler');
 const notificationService = require('../services/notificationService');
-const ContractService = require('../services/contractService');
 const logger = require('../utils/logger');
 
 class DisputeController {
   constructor() {
-    this.contractService = new ContractService();
+    this.contractService = null; // Will be set via ServiceManager
+    this.initialized = false;
+    this.initializeServices();
+  }
+
+  async initializeServices() {
+    try {
+      const serviceManager = require('../services/ServiceManager');
+      if (serviceManager.hasService('ContractService')) {
+        this.contractService = serviceManager.getExistingService('ContractService');
+        this.initialized = true;
+      } else {
+        // Fallback to singleton
+        const ContractService = require('../services/contractService');
+        this.contractService = ContractService.getInstance();
+        this.initialized = true;
+      }
+    } catch (error) {
+      logger.warn('DisputeController: Could not initialize ContractService:', error.message);
+    }
   }
 
   /**

@@ -1,6 +1,5 @@
 const Job = require('../models/Job');
 const IPFSService = require('../services/ipfsService');
-const ContractService = require('../services/contractService');
 const logger = require('../utils/logger');
 const { AppError } = require('../middleware/errorHandler');
 const { ValidationUtils } = require('../utils/helpers');
@@ -8,7 +7,26 @@ const { ValidationUtils } = require('../utils/helpers');
 class MilestoneController {
   constructor() {
     this.ipfsService = new IPFSService();
-    this.contractService = new ContractService();
+    this.contractService = null; // Will be set via ServiceManager
+    this.initialized = false;
+    this.initializeServices();
+  }
+
+  async initializeServices() {
+    try {
+      const serviceManager = require('../services/ServiceManager');
+      if (serviceManager.hasService('ContractService')) {
+        this.contractService = serviceManager.getExistingService('ContractService');
+        this.initialized = true;
+      } else {
+        // Fallback to singleton
+        const ContractService = require('../services/contractService');
+        this.contractService = ContractService.getInstance();
+        this.initialized = true;
+      }
+    } catch (error) {
+      logger.warn('MilestoneController: Could not initialize ContractService:', error.message);
+    }
   }
 
   /**

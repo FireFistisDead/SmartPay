@@ -1,33 +1,87 @@
 const { catchAsync } = require('../middleware/errorHandler');
-const MultiSigService = require('../services/multiSigService');
-const AutomatedPaymentService = require('../services/automatedPaymentService');
 const AdvancedAnalyticsService = require('../services/advancedAnalyticsService');
-const RBACService = require('../services/rbacService');
 const SecurityService = require('../services/securityService');
 const logger = require('../utils/logger');
 
-// Initialize services
-const multiSigService = new MultiSigService();
-const automatedPaymentService = new AutomatedPaymentService();
-const advancedAnalyticsService = new AdvancedAnalyticsService();
-const rbacService = new RBACService();
+// Service instances (will be lazily loaded)
+let multiSigService = null;
+let automatedPaymentService = null;
+let advancedAnalyticsService = null;
+let rbacService = null;
 const securityService = new SecurityService();
 
-// Initialize all services
-Promise.all([
-  multiSigService.initialize(),
-  automatedPaymentService.initialize(),
-  advancedAnalyticsService.initialize(),
-  rbacService.initialize()
-]).catch(error => {
-  logger.error('Error initializing advanced services:', error);
-});
+// Lazy loading functions for services
+function getMultiSigService() {
+  if (!multiSigService) {
+    try {
+      const serviceManager = require('../services/ServiceManager');
+      if (serviceManager.hasService('MultiSigService')) {
+        multiSigService = serviceManager.getExistingService('MultiSigService');
+      } else {
+        const MultiSigService = require('../services/multiSigService');
+        multiSigService = MultiSigService.getInstance();
+      }
+    } catch (error) {
+      logger.warn('Could not get MultiSigService:', error.message);
+    }
+  }
+  return multiSigService;
+}
+
+function getAutomatedPaymentService() {
+  if (!automatedPaymentService) {
+    try {
+      const serviceManager = require('../services/ServiceManager');
+      if (serviceManager.hasService('AutomatedPaymentService')) {
+        automatedPaymentService = serviceManager.getExistingService('AutomatedPaymentService');
+      } else {
+        const AutomatedPaymentService = require('../services/automatedPaymentService');
+        automatedPaymentService = AutomatedPaymentService.getInstance();
+      }
+    } catch (error) {
+      logger.warn('Could not get AutomatedPaymentService:', error.message);
+    }
+  }
+  return automatedPaymentService;
+}
+
+function getRBACService() {
+  if (!rbacService) {
+    try {
+      const serviceManager = require('../services/ServiceManager');
+      if (serviceManager.hasService('RBACService')) {
+        rbacService = serviceManager.getExistingService('RBACService');
+      } else {
+        const RBACService = require('../services/rbacService');
+        rbacService = RBACService.getInstance();
+      }
+    } catch (error) {
+      logger.warn('Could not get RBACService:', error.message);
+    }
+  }
+  return rbacService;
+}
+
+function getAdvancedAnalyticsService() {
+  if (!advancedAnalyticsService) {
+    try {
+      advancedAnalyticsService = new AdvancedAnalyticsService();
+    } catch (error) {
+      logger.warn('Could not create AdvancedAnalyticsService:', error.message);
+    }
+  }
+  return advancedAnalyticsService;
+}
 
 /**
  * Multi-signature Controllers
  */
 const proposeMultiSigTransaction = catchAsync(async (req, res) => {
-  const result = await multiSigService.proposeTransaction(req.body);
+  const service = getMultiSigService();
+  if (!service) {
+    return res.status(503).json({ success: false, message: 'MultiSig service not available' });
+  }
+  const result = await service.proposeTransaction(req.body);
   
   res.status(201).json({
     success: true,
@@ -41,7 +95,12 @@ const signMultiSigProposal = catchAsync(async (req, res) => {
   const { signature } = req.body;
   const signerAddress = req.user.walletAddress;
   
-  const result = await multiSigService.signProposal(proposalId, signerAddress, signature);
+  const service = getMultiSigService();
+  if (!service) {
+    return res.status(503).json({ success: false, message: 'MultiSig service not available' });
+  }
+  
+  const result = await service.signProposal(proposalId, signerAddress, signature);
   
   res.status(200).json({
     success: true,
@@ -54,7 +113,12 @@ const executeMultiSigProposal = catchAsync(async (req, res) => {
   const { proposalId } = req.params;
   const executorAddress = req.user.walletAddress;
   
-  const result = await multiSigService.executeProposal(proposalId, executorAddress);
+  const service = getMultiSigService();
+  if (!service) {
+    return res.status(503).json({ success: false, message: 'MultiSig service not available' });
+  }
+  
+  const result = await service.executeProposal(proposalId, executorAddress);
   
   res.status(200).json({
     success: true,
@@ -66,7 +130,12 @@ const executeMultiSigProposal = catchAsync(async (req, res) => {
 const getMultiSigProposal = catchAsync(async (req, res) => {
   const { proposalId } = req.params;
   
-  const proposal = await multiSigService.getProposal(proposalId);
+  const service = getMultiSigService();
+  if (!service) {
+    return res.status(503).json({ success: false, message: 'MultiSig service not available' });
+  }
+  
+  const proposal = await service.getProposal(proposalId);
   
   res.status(200).json({
     success: true,

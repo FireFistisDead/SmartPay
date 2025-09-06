@@ -74,12 +74,27 @@ class SecurityService {
       }
     };
 
-    // Use Redis store for distributed rate limiting
-    if (redisClient) {
-      const RedisStore = require('rate-limit-redis');
-      limitConfig.store = new RedisStore({
-        sendCommand: (...args) => redisClient.call(...args),
-      });
+    // Use Redis store for distributed rate limiting only if Redis is properly connected
+    if (redisClient && redisClient.isConnected && redisClient.client) {
+      try {
+        const { default: RedisStore } = require('rate-limit-redis');
+        limitConfig.store = new RedisStore({
+          client: redisClient.client,
+        });
+        logger.debug('Using Redis store for rate limiting');
+      } catch (error) {
+        try {
+          const RedisStore = require('rate-limit-redis');
+          limitConfig.store = new RedisStore({
+            client: redisClient.client,
+          });
+          logger.debug('Using Redis store for rate limiting (fallback)');
+        } catch (error2) {
+          logger.debug('Redis store not available, using memory store for rate limiting');
+        }
+      }
+    } else {
+      logger.debug('Redis not available, using memory store for rate limiting');
     }
 
     return rateLimit(limitConfig);

@@ -13,16 +13,16 @@ const connectDB = require('./config/database');
 const redisClient = require('./config/redis');
 const logger = require('./utils/logger');
 const { errorHandler } = require('./middleware/errorHandler');
+const serviceManager = require('./services/ServiceManager');
 const BlockchainEventListener = require('./services/blockchainEventListener');
-const WebSocketService = require('./services/webSocketService');
 const SecurityService = require('./services/securityService');
 
-// Phase 5 services
-const AdvancedErrorHandlingService = require('./services/advancedErrorHandlingService');
-const ComprehensiveMonitoringService = require('./services/comprehensiveMonitoringService');
-const RealTimeAlertingService = require('./services/realTimeAlertingService');
-const PerformanceAnalyticsService = require('./services/performanceAnalyticsService');
-const OperationalDashboardService = require('./services/operationalDashboardService');
+// Phase 5 services - temporarily commented out
+// const AdvancedErrorHandlingService = require('./services/advancedErrorHandlingService');
+// const ComprehensiveMonitoringService = require('./services/comprehensiveMonitoringService');
+// const RealTimeAlertingService = require('./services/realTimeAlertingService');
+// const PerformanceAnalyticsService = require('./services/performanceAnalyticsService');
+// const OperationalDashboardService = require('./services/operationalDashboardService');
 
 // Import routes
 const jobRoutes = require('./routes/jobRoutes');
@@ -33,8 +33,8 @@ const userRoutes = require('./routes/userRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const advancedRoutes = require('./routes/advancedRoutes');
-const phase4Routes = require('./routes/phase4Routes');
-const phase5Routes = require('./routes/phase5Routes');
+// const phase4Routes = require('./routes/phase4Routes'); // Temporarily commented out
+// const phase5Routes = require('./routes/phase5Routes'); // Temporarily commented out
 
 class Server {
   constructor() {
@@ -48,16 +48,16 @@ class Server {
     });
     this.port = config.port;
     
-    // Initialize advanced services
-    this.webSocketService = new WebSocketService();
+    // Services will be initialized through ServiceManager
+    this.webSocketService = null;
     this.securityService = new SecurityService();
     
-    // Initialize Phase 5 services
-    this.errorHandlingService = new AdvancedErrorHandlingService();
-    this.monitoringService = new ComprehensiveMonitoringService();
-    this.alertingService = new RealTimeAlertingService();
-    this.performanceService = new PerformanceAnalyticsService();
-    this.dashboardService = new OperationalDashboardService();
+    // Initialize Phase 5 services - temporarily commented out
+    // this.errorHandlingService = new AdvancedErrorHandlingService();
+    // this.monitoringService = new ComprehensiveMonitoringService();
+    // this.alertingService = new RealTimeAlertingService();
+    // this.performanceService = new PerformanceAnalyticsService();
+    // this.dashboardService = new OperationalDashboardService();
     
     this.setupMiddleware();
     this.setupRoutes();
@@ -106,6 +106,47 @@ class Server {
         }
       });
     });
+
+    // API documentation endpoint
+    this.app.get('/api', (req, res) => {
+      res.status(200).json({
+        name: 'SmartPay Freelance Escrow API',
+        version: '1.0.0',
+        description: 'Decentralized freelance work platform API',
+        endpoints: {
+          '/health': 'Server health check',
+          '/api': 'This documentation',
+          '/api/users': 'User management endpoints',
+          '/api/jobs': 'Job management endpoints',
+          '/api/milestones': 'Milestone management endpoints',
+          '/api/payments': 'Payment processing endpoints',
+          '/api/disputes': 'Dispute resolution endpoints',
+          '/api/ipfs': 'IPFS file storage endpoints',
+          '/api/analytics': 'Platform analytics endpoints',
+          '/api/advanced': 'Advanced features (multi-sig, automation, RBAC)',
+        },
+        examples: {
+          'GET /api/users': 'List all users',
+          'GET /api/jobs': 'List all jobs',
+          'GET /api/analytics/platform': 'Get platform statistics',
+          'GET /api/advanced/health': 'Advanced features health check',
+        },
+        authentication: 'Most endpoints require Bearer token authentication',
+        documentation: 'Visit the endpoints for detailed API documentation'
+      });
+    });
+
+    // Root endpoint
+    this.app.get('/', (req, res) => {
+      res.status(200).json({
+        message: 'Welcome to SmartPay Freelance Escrow API',
+        version: '1.0.0',
+        status: 'Server is running',
+        documentation: '/api',
+        health: '/health',
+        timestamp: new Date().toISOString()
+      });
+    });
   }
 
   setupRoutes() {
@@ -118,8 +159,8 @@ class Server {
     this.app.use('/api/analytics', analyticsRoutes);
     this.app.use('/api/payments', paymentRoutes);
     this.app.use('/api/advanced', advancedRoutes);
-    this.app.use('/api/phase4', phase4Routes);
-    this.app.use('/api/phase5', phase5Routes);
+    // this.app.use('/api/phase4', phase4Routes); // Temporarily commented out
+    // this.app.use('/api/phase5', phase5Routes); // Temporarily commented out
 
     // 404 handler
     this.app.use('*', (req, res) => {
@@ -140,28 +181,36 @@ class Server {
     // Unhandled promise rejections
     process.on('unhandledRejection', (reason, promise) => {
       logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-      this.gracefulShutdown();
+      // In development, don't shut down for unhandled rejections
+      if (config.nodeEnv === 'production') {
+        this.gracefulShutdown();
+      }
     });
 
     // Uncaught exceptions
     process.on('uncaughtException', (error) => {
       logger.error('Uncaught Exception:', error);
+      // Always shut down for uncaught exceptions as they can leave the process in an undefined state
       this.gracefulShutdown();
     });
   }
 
-  setupSocketIO() {
-    // Initialize advanced WebSocket service
-    this.webSocketService.initialize(this.server);
-    
-    // Make WebSocket service available globally
-    global.webSocketService = this.webSocketService;
+  async setupSocketIO() {
+    // Initialize WebSocket service through ServiceManager
+    this.webSocketService = await serviceManager.initializeWebSocketService(this.server);
     
     logger.info('Advanced WebSocket service configured');
   }
 
   async initializePhase5Services() {
     try {
+      // Skip Phase 5 services if they're not initialized (temporarily disabled)
+      if (!this.errorHandlingService || !this.monitoringService || !this.alertingService || 
+          !this.performanceService || !this.dashboardService) {
+        logger.info('Phase 5 services disabled - skipping initialization');
+        return;
+      }
+
       // Initialize error handling service
       await this.errorHandlingService.initialize();
       
@@ -212,10 +261,19 @@ class Server {
       await redisClient.connect();
       logger.info('Redis connected successfully');
 
+      // Initialize core services through ServiceManager
+      await serviceManager.initializeCoreServices();
+
+      // Initialize WebSocket service
+      await this.setupSocketIO();
+
       // Start blockchain event listener
       const eventListener = new BlockchainEventListener();
       await eventListener.start();
       logger.info('Blockchain event listener started');
+
+      // Initialize advanced services
+      await serviceManager.initializeAdvancedServices();
 
       // Initialize Phase 5 services
       await this.initializePhase5Services();
