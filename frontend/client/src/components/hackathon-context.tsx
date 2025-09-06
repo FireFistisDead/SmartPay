@@ -1,8 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Clock, Zap, Code, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
+import { useSmartAnimations } from "../hooks/use-smart-animations";
 
 export default function HackathonContext() {
+  const { calculateAnimationConfig, getViewportConfig } = useSmartAnimations();
+
   return (
     <section id="about" className="py-20 blockchain-grid">
       <div className="container mx-auto px-4">
@@ -10,8 +13,8 @@ export default function HackathonContext() {
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
+          transition={calculateAnimationConfig({ duration: 0.8 })}
+          viewport={getViewportConfig()}
         >
           <Badge className="mb-6 px-4 py-2 text-sm font-medium bg-purple-600 text-white border-purple-500">
             🏆 MindSprint 48 Hour Hackathon by Unstop
@@ -30,8 +33,8 @@ export default function HackathonContext() {
             className="text-center"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            viewport={{ once: true }}
+            transition={calculateAnimationConfig({ duration: 0.6, delay: 0.1 })}
+            viewport={getViewportConfig()}
           >
             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-500 rounded-2xl mb-4">
               <Clock className="h-8 w-8 text-white" />
@@ -44,8 +47,8 @@ export default function HackathonContext() {
             className="text-center"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
+            transition={calculateAnimationConfig({ duration: 0.6, delay: 0.2 })}
+            viewport={getViewportConfig()}
           >
             <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500 rounded-2xl mb-4">
               <Zap className="h-8 w-8 text-white" />
@@ -58,8 +61,8 @@ export default function HackathonContext() {
             className="text-center"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            viewport={{ once: true }}
+            transition={calculateAnimationConfig({ duration: 0.6, delay: 0.3 })}
+            viewport={getViewportConfig()}
           >
             <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-500 rounded-2xl mb-4">
               <Code className="h-8 w-8 text-white" />
@@ -72,8 +75,8 @@ export default function HackathonContext() {
             className="text-center"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            viewport={{ once: true }}
+            transition={calculateAnimationConfig({ duration: 0.6, delay: 0.4 })}
+            viewport={getViewportConfig()}
           >
             <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-500 rounded-2xl mb-4">
               <Trophy className="h-8 w-8 text-white" />
@@ -87,8 +90,8 @@ export default function HackathonContext() {
           className="flex flex-wrap justify-center gap-4"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          viewport={{ once: true }}
+          transition={calculateAnimationConfig({ duration: 0.8, delay: 0.5 })}
+          viewport={getViewportConfig()}
         >
           <Badge className="px-4 py-2 bg-green-600/20 text-green-400 border-green-500/30">
             ● Live on Polygon Testnet

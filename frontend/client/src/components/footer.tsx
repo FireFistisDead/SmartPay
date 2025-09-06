@@ -68,21 +68,19 @@ const TechBadge = ({ name, icon }: { name: string; icon: string }) => (
 const FloatingParticle = ({ delay = 0 }: { delay?: number }) => {
   return (
     <motion.div
-      className="absolute w-1 h-1 bg-primary/30 rounded-full"
+      className="absolute w-1 h-1 bg-primary/30 rounded-full will-change-transform"
       initial={{ 
         x: Math.random() * 100 + "%", 
         y: "100%",
         opacity: 0 
       }}
-      animate={{ 
-        y: "-20%",
-        opacity: [0, 1, 0],
-        scale: [0, 1, 0]
+      whileHover={{ 
+        y: "-10%",
+        opacity: [0, 0.8, 0],
+        scale: [0, 1.2, 0]
       }}
       transition={{
-        duration: Math.random() * 3 + 2,
-        delay: delay,
-        repeat: Infinity,
+        duration: 1,
         ease: "easeOut"
       }}
     />

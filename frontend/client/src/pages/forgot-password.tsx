@@ -10,14 +10,26 @@ import ParticleBackground from "@/components/particle-background";
 
 const FloatingIcon = ({ icon, className, delay = 0 }: { icon: React.ReactNode; className: string; delay?: number }) => (
   <motion.div
-    className={`absolute text-2xl opacity-20 ${className}`}
+    className={`absolute text-2xl opacity-20 ${className} will-change-transform`}
+    initial={{
+      y: -5,
+      rotate: 0,
+      opacity: 0.15,
+    }}
     animate={{
-      y: [-15, 15, -15],
-      rotate: [0, 180, 360],
+      y: 5,
+      rotate: 10,
+      opacity: 0.25,
+    }}
+    whileHover={{
+      y: 0,
+      rotate: 180,
+      opacity: 0.4,
+      scale: 1.1,
+      transition: { duration: 0.6 }
     }}
     transition={{
-      duration: 6,
-      repeat: Infinity,
+      duration: 4,
       ease: "easeInOut",
       delay,
     }}

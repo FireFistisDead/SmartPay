@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
+import { useSmartAnimations } from "@/hooks/use-smart-animations";
 import { Rocket, PlayCircle, Clock, Shield, Handshake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -17,6 +18,7 @@ const FeatureHighlight = ({ icon, title, description }: { icon: React.ReactNode;
 export default function CallToAction() {
   const [, setLocation] = useLocation();
   const { ref } = useScrollAnimation();
+  const { calculateAnimationConfig, getViewportConfig } = useSmartAnimations();
 
   const handleGetStarted = () => {
     setLocation("/login");
@@ -31,8 +33,8 @@ export default function CallToAction() {
           className="text-center max-w-4xl mx-auto"
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true, margin: "-100px" }}
+          transition={calculateAnimationConfig({ duration: 0.8 })}
+          viewport={getViewportConfig()}
         >
           <h2 className="text-6xl md:text-7xl font-bold gradient-text mb-8" data-testid="text-cta-title">
             Ready to Experience the Future?
@@ -46,8 +48,8 @@ export default function CallToAction() {
             className="flex flex-col sm:flex-row gap-6 justify-center mb-16"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            viewport={{ once: true, margin: "-50px" }}
+            transition={calculateAnimationConfig({ duration: 0.8, delay: 0.2 })}
+            viewport={getViewportConfig()}
           >
             <Button 
               size="lg" 
@@ -73,16 +75,19 @@ export default function CallToAction() {
             className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            viewport={{ once: true }}
+            transition={calculateAnimationConfig({ duration: 0.8, delay: 0.4 })}
+            viewport={getViewportConfig()}
           >
             {[0, 1, 2].map((index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 + index * 0.1 }}
-                viewport={{ once: true }}
+                transition={calculateAnimationConfig({ 
+                  duration: 0.6, 
+                  delay: 0.6 + index * 0.1 
+                })}
+                viewport={getViewportConfig()}
               >
                 <FeatureHighlight
                   icon={index === 0 ? <Clock className="text-white text-2xl" /> : index === 1 ? <Shield className="text-white text-2xl" /> : <Handshake className="text-white text-2xl" />}
