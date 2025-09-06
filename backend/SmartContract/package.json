@@ -1,6 +1,24 @@
 {
   "name": "SmartContract",
   "version": "1.0.0",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:coverage": "hardhat coverage",
+    "deploy:local": "hardhat run scripts/deploy.ts --network hardhat",
+    "deploy:sepolia": "hardhat run scripts/deploy.ts --network sepolia",
+    "deploy:mumbai": "hardhat run scripts/deploy.ts --network mumbai",
+    "verify:sepolia": "cross-env HARDHAT_NETWORK=sepolia hardhat run scripts/verify-contracts.ts",
+    "verify:mumbai": "cross-env HARDHAT_NETWORK=mumbai hardhat run scripts/verify-contracts.ts",
+    "status:local": "cross-env HARDHAT_NETWORK=hardhat hardhat run scripts/check-deployment.ts",
+    "status:sepolia": "cross-env HARDHAT_NETWORK=sepolia hardhat run scripts/check-deployment.ts",
+    "status:mumbai": "cross-env HARDHAT_NETWORK=mumbai hardhat run scripts/check-deployment.ts",
+    "balance:local": "hardhat run scripts/check-balance.ts --network hardhat",
+    "balance:sepolia": "hardhat run scripts/check-balance.ts --network sepolia",
+    "balance:mumbai": "hardhat run scripts/check-balance.ts --network mumbai",
+    "verify-setup": "hardhat run scripts/verify-deployment.ts",
+    "clean": "hardhat clean"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",
     "@nomicfoundation/hardhat-ethers": "^3.1.0",
@@ -15,6 +33,8 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^24.3.1",
     "chai": "^4.5.0",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5",
     "ethers": "^6.15.0",
     "hardhat": "^2.26.3",
     "hardhat-gas-reporter": "^2.3.0",
