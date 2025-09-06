@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { PlusCircle, Lock, FileCheck, CreditCard, ArrowRight } from "lucide-react";
+import { useSmartAnimations } from "../hooks/use-smart-animations";
 
 const steps = [
   {
@@ -29,6 +30,8 @@ const steps = [
 ];
 
 export default function HowItWorks() {
+  const { calculateAnimationConfig, getViewportConfig } = useSmartAnimations();
+
   return (
     <section id="how-it-works" className="py-20 bg-muted/20 relative overflow-hidden blockchain-grid">
       <div className="absolute inset-0 blockchain-grid opacity-5"></div>
@@ -38,8 +41,8 @@ export default function HowItWorks() {
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true, margin: "-100px" }}
+          transition={calculateAnimationConfig({ duration: 0.8 })}
+          viewport={getViewportConfig()}
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4 gradient-text">
             How It Works
@@ -56,8 +59,11 @@ export default function HowItWorks() {
               className="flex items-center mb-12 last:mb-0"
               initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
               whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: index * 0.2 }}
-              viewport={{ once: true, margin: "-50px" }}
+              transition={calculateAnimationConfig({ 
+                duration: 0.8, 
+                delay: index * 0.2 
+              })}
+              viewport={getViewportConfig()}
             >
               <div className={`flex-shrink-0 w-16 h-16 bg-gradient-to-r ${step.color} rounded-xl flex items-center justify-center text-white mr-6`}>
                 {step.icon}
@@ -77,9 +83,9 @@ export default function HowItWorks() {
               
               {index < steps.length - 1 && (
                 <motion.div
-                  className="flex-shrink-0 ml-6 text-muted-foreground"
-                  animate={{ x: [0, 5, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
+                  className="flex-shrink-0 ml-6 text-muted-foreground will-change-transform"
+                  whileHover={{ x: 3 }}
+                  transition={{ duration: 0.3 }}
                 >
                   <ArrowRight className="h-6 w-6" />
                 </motion.div>
@@ -92,8 +98,8 @@ export default function HowItWorks() {
           className="text-center mt-12"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.8 }}
-          viewport={{ once: true, margin: "-100px" }}
+          transition={calculateAnimationConfig({ duration: 0.8, delay: 0.8 })}
+          viewport={getViewportConfig()}
         >
           <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-full border border-primary/20">
             <span className="text-sm font-medium">⚡ Average processing time: 2-5 minutes</span>

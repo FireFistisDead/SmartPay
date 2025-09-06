@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Shield, Coins, Scale, Eye } from "lucide-react";
+import { useSmartAnimations } from "@/hooks/use-smart-animations";
 
 const features = [
   {
@@ -33,6 +34,8 @@ const features = [
 ];
 
 export default function FeaturesSection() {
+  const { calculateAnimationConfig, getViewportConfig, scrollMetrics } = useSmartAnimations();
+
   return (
     <section id="features" className="py-20 relative overflow-hidden blockchain-grid">
       <div className="absolute inset-0 blockchain-grid opacity-5"></div>
@@ -42,8 +45,8 @@ export default function FeaturesSection() {
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          viewport={{ once: true, margin: "-100px" }}
+          transition={calculateAnimationConfig({ duration: 0.8 })}
+          viewport={getViewportConfig({ once: true })}
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4 gradient-text">
             Core Features
@@ -54,58 +57,66 @@ export default function FeaturesSection() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          {features.map((feature, index) => (
-            <motion.div
-              key={feature.title}
-              className="group p-8 rounded-2xl glass-morphism border border-border/50 hover:border-primary/30 transition-all duration-500 relative overflow-hidden"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: index * 0.2, ease: "easeOut" }}
-              viewport={{ once: true, margin: "-50px" }}
-              whileHover={{ scale: 1.02, y: -5 }}
-            >
-              {/* Background gradient on hover */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}></div>
-              
-              <div className="relative z-10">
-                <div className={`w-16 h-16 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                  {feature.icon}
+          {features.map((feature, index) => {
+            const animationConfig = calculateAnimationConfig({ 
+              duration: 0.6,
+              delay: scrollMetrics.isScrolling ? 0 : index * 0.08
+            });
+
+            return (
+              <motion.div
+                key={feature.title}
+                className="group p-8 rounded-2xl glass-morphism border border-border/50 hover:border-primary/30 transition-transform duration-300 relative overflow-hidden performance-optimized transform-gpu composite-layer"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={animationConfig}
+                viewport={{ once: true, amount: 0.25 }}
+                style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', willChange: 'transform, opacity' }}
+                whileHover={{ 
+                  scale: 1.01, 
+                  y: -2,
+                  transition: { duration: 0.2, ease: "easeOut" }
+                }}
+              >
+                {/* Background gradient on hover */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-3 transition-opacity duration-300`}></div>
+                
+                <div className="relative z-10">
+                  <div className={`w-16 h-16 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center text-white mb-6 group-hover:scale-105 transition-transform duration-200 will-change-transform transform-gpu`}>
+                    {feature.icon}
+                  </div>
+                  
+                  <h3 className="text-xl font-semibold mb-4 group-hover:text-primary transition-colors duration-200">
+                    {feature.title}
+                  </h3>
+                  
+                  <p className="text-muted-foreground mb-6 leading-relaxed">
+                    {feature.description}
+                  </p>
+                  
+                  <div className="space-y-2">
+                    {feature.benefits.map((benefit, idx) => (
+                      <div
+                        key={benefit}
+                        className="flex items-center text-sm opacity-80 group-hover:opacity-100 transition-opacity duration-200"
+                      >
+                        <div className={`w-2 h-2 bg-gradient-to-r ${feature.color} rounded-full mr-3`}></div>
+                        <span className="text-muted-foreground">{benefit}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                
-                <h3 className="text-xl font-semibold mb-4 group-hover:text-primary transition-colors">
-                  {feature.title}
-                </h3>
-                
-                <p className="text-muted-foreground mb-6 leading-relaxed">
-                  {feature.description}
-                </p>
-                
-                <div className="space-y-2">
-                  {feature.benefits.map((benefit, idx) => (
-                    <motion.div
-                      key={benefit}
-                      className="flex items-center text-sm"
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: (index * 0.2) + (idx * 0.1) }}
-                      viewport={{ once: true, margin: "-30px" }}
-                    >
-                      <div className={`w-2 h-2 bg-gradient-to-r ${feature.color} rounded-full mr-3`}></div>
-                      <span className="text-muted-foreground">{benefit}</span>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
 
         <motion.div
           className="text-center mt-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.8 }}
-          viewport={{ once: true, margin: "-100px" }}
+          transition={calculateAnimationConfig({ duration: 0.6, delay: 0.2 })}
+          viewport={getViewportConfig({ once: true })}
         >
           <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-full">
             <span className="text-sm font-medium">🔒 All features secured by smart contracts</span>

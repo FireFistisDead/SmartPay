@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -12,14 +12,26 @@ import ParticleBackground from "@/components/particle-background";
 
 const FloatingIcon = ({ icon, className, delay = 0 }: { icon: React.ReactNode; className: string; delay?: number }) => (
   <motion.div
-    className={`absolute text-2xl opacity-20 ${className}`}
+    className={`absolute text-2xl opacity-20 ${className} will-change-transform`}
+    initial={{
+      y: -5,
+      rotate: 0,
+      opacity: 0.15,
+    }}
     animate={{
-      y: [-15, 15, -15],
-      rotate: [0, 180, 360],
+      y: 5,
+      rotate: 10,
+      opacity: 0.25,
+    }}
+    whileHover={{
+      y: 0,
+      rotate: 180,
+      opacity: 0.4,
+      scale: 1.1,
+      transition: { duration: 0.6 }
     }}
     transition={{
-      duration: 6,
-      repeat: Infinity,
+      duration: 4,
       ease: "easeInOut",
       delay,
     }}
@@ -34,6 +46,8 @@ export default function Signup() {
   const [activeTab, setActiveTab] = useState("role");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isTabSwitch, setIsTabSwitch] = useState(false);
+  const tabTimerRef = useRef<number | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -98,7 +112,16 @@ export default function Signup() {
     }
     setErrorMessage("");
     setActiveTab(newTab);
+    setIsTabSwitch(true);
+    if (tabTimerRef.current) clearTimeout(tabTimerRef.current);
+    tabTimerRef.current = window.setTimeout(() => setIsTabSwitch(false), 350);
   };
+
+  useEffect(() => {
+    return () => {
+      if (tabTimerRef.current) clearTimeout(tabTimerRef.current);
+    };
+  }, []);
 
   const handleRoleSelection = (role: "client" | "freelancer") => {
     setSelectedRole(role);
@@ -247,7 +270,7 @@ export default function Signup() {
                     data-testid="role-client"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.8 }}
+                    transition={{ duration: isTabSwitch ? 0.25 : 0.5, delay: isTabSwitch ? 0 : 0.2 }}
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
@@ -277,7 +300,7 @@ export default function Signup() {
                     data-testid="role-freelancer"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 1.0 }}
+                    transition={{ duration: isTabSwitch ? 0.25 : 0.5, delay: isTabSwitch ? 0.05 : 0.3 }}
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-secondary/20 rounded-lg flex items-center justify-center">
@@ -300,7 +323,7 @@ export default function Signup() {
                   <motion.div
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: isTabSwitch ? 0.2 : 0.3 }}
                     className="mt-4"
                   >
                     <Button
@@ -319,7 +342,7 @@ export default function Signup() {
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
+                    transition={{ duration: isTabSwitch ? 0.25 : 0.5, delay: isTabSwitch ? 0 : 0.1 }}
                   >
                     <Label htmlFor="fullName" className="text-sm">Full Name</Label>
                     <div className="relative">
@@ -339,7 +362,7 @@ export default function Signup() {
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
+                    transition={{ duration: isTabSwitch ? 0.25 : 0.5, delay: isTabSwitch ? 0.05 : 0.15 }}
                   >
                     <Label htmlFor="email" className="text-sm">Email Address</Label>
                     <div className="relative">
@@ -359,7 +382,7 @@ export default function Signup() {
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.4 }}
+                    transition={{ duration: isTabSwitch ? 0.25 : 0.5, delay: isTabSwitch ? 0.1 : 0.2 }}
                   >
                     <Label htmlFor="password" className="text-sm">Password</Label>
                     <div className="relative">
@@ -386,7 +409,7 @@ export default function Signup() {
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.5 }}
+                    transition={{ duration: isTabSwitch ? 0.25 : 0.5, delay: isTabSwitch ? 0.15 : 0.25 }}
                   >
                     <Label htmlFor="confirmPassword" className="text-sm">Confirm Password</Label>
                     <div className="relative">
@@ -435,11 +458,11 @@ export default function Signup() {
                   </motion.div>
                 </div>
 
-                <motion.div 
+                  <motion.div 
                   className="space-y-3"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.7 }}
+                    transition={{ duration: isTabSwitch ? 0.25 : 0.5, delay: isTabSwitch ? 0.2 : 0.35 }}
                 >
                   <Button 
                     className="w-full bg-gradient-to-r from-primary to-secondary h-10 text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
