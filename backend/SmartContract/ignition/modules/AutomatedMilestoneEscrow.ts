@@ -1,18 +1,23 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
+import MyTokenModule from "./MyToken";
 
 const AutomatedMilestoneEscrowModule = buildModule("AutomatedMilestoneEscrowModule", (m) => {
-  const feeRecipient = m.getParameter("feeRecipient");
-  const disputeResolver = m.getParameter("disputeResolver");
-  // Chainlink ETH/USD price feed address (Sepolia testnet)
-  const priceFeed = m.getParameter("priceFeed", "0x694AA1769357215DE4FAC081bf1f309aDC325306");
-
+  // Import MyToken from its module
+  const { myToken } = m.useModule(MyTokenModule);
+  
+  // Get platform wallet address (default to deployer)
+  const platformWallet = m.getParameter("platformWallet", "0x0000000000000000000000000000000000000000");
+  
+  // Get automation registry address (can be zero address for testing)
+  const automationRegistry = m.getParameter("automationRegistry", "0x0000000000000000000000000000000000000000");
+  
   const automatedMilestoneEscrow = m.contract("AutomatedMilestoneEscrow", [
-    feeRecipient,
-    disputeResolver,
-    priceFeed,
+    myToken, 
+    platformWallet, 
+    automationRegistry
   ]);
 
-  return { automatedMilestoneEscrow };
+  return { automatedMilestoneEscrow, myToken };
 });
 
 export default AutomatedMilestoneEscrowModule;
