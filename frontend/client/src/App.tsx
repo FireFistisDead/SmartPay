@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/home";
 import Login from "@/pages/login";
+import Signup from "@/pages/signup";
+import ForgotPassword from "@/pages/forgot-password";
 import ClientDashboard from "@/pages/client-dashboard";
 import FreelancerDashboard from "@/pages/freelancer-dashboard";
 import CreateProject from "@/pages/create-project";
@@ -28,6 +30,8 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
+      <Route path="/signup" component={Signup} />
+      <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/dashboard" component={DashboardRouter} />
       <Route path="/create-project" component={CreateProject} />
       <Route path="/browse-projects" component={BrowseProjects} />
