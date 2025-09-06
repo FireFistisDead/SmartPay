@@ -3,7 +3,7 @@ const { body, param } = require('express-validator');
 const { authenticate, requireJobAccess, requireJobFreelancer, requireJobClient } = require('../middleware/auth');
 const { catchAsync } = require('../middleware/errorHandler');
 const milestoneController = require('../controllers/milestoneController');
-const validate = require('../middleware/validation');
+const { validate } = require('../middleware/validation');
 
 const router = express.Router();
 

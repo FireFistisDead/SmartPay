@@ -1,4 +1,3 @@
-const PaymentService = require('../services/paymentService');
 const PriceOracleService = require('../services/priceOracleService');
 const logger = require('../utils/logger');
 const { AppError, catchAsync } = require('../middleware/errorHandler');
@@ -8,7 +7,7 @@ const { AppError, catchAsync } = require('../middleware/errorHandler');
  */
 class PaymentController {
   constructor() {
-    this.paymentService = new PaymentService();
+    this.paymentService = null; // Will be set via ServiceManager
     this.priceOracleService = new PriceOracleService();
     this.initialized = false;
   }
@@ -18,9 +17,15 @@ class PaymentController {
    */
   async initialize() {
     try {
-      await this.paymentService.initialize();
-      this.initialized = true;
-      logger.info('Payment controller initialized');
+      // Get PaymentService from ServiceManager
+      const serviceManager = require('../services/ServiceManager');
+      if (serviceManager.hasService('PaymentService')) {
+        this.paymentService = serviceManager.getExistingService('PaymentService');
+        this.initialized = true;
+        logger.info('Payment controller initialized');
+      } else {
+        logger.warn('PaymentService not available in ServiceManager');
+      }
     } catch (error) {
       logger.error('Failed to initialize payment controller:', error);
       // Don't throw error - allow graceful degradation

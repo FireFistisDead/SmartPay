@@ -1,9 +1,9 @@
 const express = require('express');
 const { query } = require('express-validator');
-const { authenticate, requireRole } = require('../middleware/auth');
+const { authenticate, optionalAuth, requireRole } = require('../middleware/auth');
 const { catchAsync } = require('../middleware/errorHandler');
 const analyticsController = require('../controllers/analyticsController');
-const validate = require('../middleware/validation');
+const { validate } = require('../middleware/validation');
 
 const router = express.Router();
 

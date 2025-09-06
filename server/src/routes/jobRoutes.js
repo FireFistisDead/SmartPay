@@ -3,7 +3,7 @@ const { body, param, query } = require('express-validator');
 const { authenticate, optionalAuth, requireJobAccess, requireJobClient } = require('../middleware/auth');
 const { catchAsync } = require('../middleware/errorHandler');
 const jobController = require('../controllers/jobController');
-const validate = require('../middleware/validation');
+const { validate } = require('../middleware/validation');
 
 const router = express.Router();
 

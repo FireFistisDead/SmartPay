@@ -2,9 +2,6 @@ const cron = require('node-cron');
 const { ethers } = require('ethers');
 const config = require('../config/config');
 const logger = require('../utils/logger');
-const ContractService = require('./contractService');
-const PaymentService = require('./paymentService');
-const MultiSigService = require('./multiSigService');
 const Job = require('../models/Job');
 const User = require('../models/User');
 const { AppError } = require('../middleware/errorHandler');
@@ -15,9 +12,10 @@ const redisClient = require('../config/redis');
  */
 class AutomatedPaymentService {
   constructor() {
-    this.contractService = new ContractService();
-    this.paymentService = new PaymentService();
-    this.multiSigService = new MultiSigService();
+    // Services will be injected via ServiceManager
+    this.contractService = null;
+    this.paymentService = null;
+    this.multiSigService = null;
     this.initialized = false;
     this.scheduledJobs = new Map();
     this.automationRules = new Map();
@@ -46,18 +44,43 @@ class AutomatedPaymentService {
    */
   async initialize() {
     try {
-      await this.contractService.initialize();
-      await this.paymentService.initialize();
-      await this.multiSigService.initialize();
+      // Get services from ServiceManager
+      try {
+        const serviceManager = require('./ServiceManager');
+        
+        // Try to get existing services
+        if (serviceManager.hasService('ContractService')) {
+          this.contractService = serviceManager.getExistingService('ContractService');
+        }
+        
+        if (serviceManager.hasService('PaymentService')) {
+          this.paymentService = serviceManager.getExistingService('PaymentService');
+        }
+        
+        if (serviceManager.hasService('MultiSigService')) {
+          this.multiSigService = serviceManager.getExistingService('MultiSigService');
+        }
+        
+      } catch (error) {
+        logger.warn('ServiceManager not available for automated payments:', error.message);
+      }
+
+      // Load existing automation rules (if possible)
+      try {
+        await this.loadAutomationRules();
+      } catch (error) {
+        logger.warn('Failed to load automation rules:', error.message);
+      }
       
-      // Load existing automation rules
-      await this.loadAutomationRules();
-      
-      // Start scheduled tasks
-      this.startScheduledTasks();
+      // Start scheduled tasks (if possible)
+      try {
+        this.startScheduledTasks();
+      } catch (error) {
+        logger.warn('Failed to start scheduled tasks:', error.message);
+      }
       
       this.initialized = true;
-      logger.info('Automated payment service initialized successfully');
+      logger.info('Automated payment service initialized (some features may be limited)');
       
     } catch (error) {
       logger.error('Failed to initialize automated payment service:', error);

@@ -4,7 +4,7 @@ const { body, param } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
 const { catchAsync } = require('../middleware/errorHandler');
 const ipfsController = require('../controllers/ipfsController');
-const validate = require('../middleware/validation');
+const { validate } = require('../middleware/validation');
 const config = require('../config/config');
 
 const router = express.Router();

@@ -1,16 +1,11 @@
 const express = require('express');
 const PaymentController = require('../controllers/paymentController');
-const { authenticate, requireJobOwner, requireAdmin } = require('../middleware/auth');
+const { authenticate, requireJobClient, requireRole } = require('../middleware/auth');
 const { validatePaymentRequest, validatePriceRequest, validateBatchOperations } = require('../middleware/validation');
 const router = express.Router();
 
-// Initialize payment controller
+// Create payment controller instance (initialization handled by ServiceManager)
 const paymentController = new PaymentController();
-
-// Initialize the controller when the module loads
-paymentController.initialize().catch(error => {
-  console.error('Failed to initialize payment controller:', error.message);
-});
 
 // Token Information Routes
 router.get('/token/info', paymentController.getTokenInfo);
@@ -38,7 +33,7 @@ router.post('/transfer',
 // Job Escrow Routes
 router.post('/jobs/:jobId/fund', 
   authenticate, 
-  requireJobOwner,
+  requireJobClient,
   validatePaymentRequest, 
   paymentController.fundJobEscrow
 );
@@ -90,7 +85,7 @@ router.post('/batch',
 // Admin Routes
 router.delete('/cache', 
   authenticate, 
-  requireAdmin, 
+  requireRole(['admin']), 
   paymentController.clearPriceCache
 );
 

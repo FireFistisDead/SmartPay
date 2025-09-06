@@ -1,7 +1,6 @@
 const { ethers } = require('ethers');
 const config = require('../config/config');
 const logger = require('../utils/logger');
-const ContractService = require('./contractService');
 const TransactionService = require('./transactionService');
 const { AppError } = require('../middleware/errorHandler');
 const redisClient = require('../config/redis');
@@ -11,12 +10,19 @@ const redisClient = require('../config/redis');
  */
 class MultiSigService {
   constructor() {
+    // Singleton pattern to prevent duplicates
+    if (MultiSigService.instance) {
+      return MultiSigService.instance;
+    }
+    
     this.provider = null;
-    this.contractService = new ContractService();
+    this.contractService = null; // Will be set via ServiceManager
     this.transactionService = new TransactionService();
     this.initialized = false;
     this.cachePrefix = 'multisig:';
     this.pendingTransactions = new Map();
+    
+    MultiSigService.instance = this;
     
     // Multi-sig contract ABI
     this.multiSigABI = [
@@ -45,15 +51,28 @@ class MultiSigService {
       const network = config.blockchain.networks[config.blockchain.defaultNetwork];
       this.provider = new ethers.JsonRpcProvider(network.rpcUrl);
       
-      // Initialize contract service
-      await this.contractService.initialize();
-      
-      this.initialized = true;
-      logger.info('Multi-signature service initialized successfully');
+      // Get ContractService from ServiceManager
+      try {
+        const serviceManager = require('./ServiceManager');
+        if (serviceManager.hasService('ContractService')) {
+          this.contractService = serviceManager.getExistingService('ContractService');
+        } else {
+          // Fallback to singleton
+          const ContractService = require('./contractService');
+          this.contractService = ContractService.getInstance();
+        }
+        this.initialized = true;
+        logger.info('Multi-signature service initialized successfully');
+      } catch (contractError) {
+        logger.warn('Multi-sig service running in fallback mode:', contractError.message);
+        this.initialized = false;
+        // Don't throw error, just continue with limited functionality
+      }
       
     } catch (error) {
-      logger.error('Failed to initialize multi-sig service:', error);
-      throw new AppError('Multi-sig service initialization failed', 500, 'MULTISIG_INIT_ERROR');
+      logger.warn('Failed to initialize multi-sig service, continuing without it:', error.message);
+      this.initialized = false;
+      // Don't throw error, just continue
     }
   }
 

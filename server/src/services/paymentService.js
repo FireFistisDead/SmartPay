@@ -2,7 +2,6 @@ const { ethers } = require('ethers');
 const config = require('../config/config');
 const logger = require('../utils/logger');
 const TransactionService = require('./transactionService');
-const ContractService = require('./contractService');
 const { AppError } = require('../middleware/errorHandler');
 
 /**
@@ -10,12 +9,19 @@ const { AppError } = require('../middleware/errorHandler');
  */
 class PaymentService {
   constructor() {
+    // Singleton pattern to prevent duplicates
+    if (PaymentService.instance) {
+      return PaymentService.instance;
+    }
+    
     this.provider = null;
     this.signer = null;
     this.tokenContract = null;
-    this.contractService = new ContractService();
+    this.contractService = null; // Will be set via ServiceManager
     this.transactionService = new TransactionService();
     this.initialized = false;
+    
+    PaymentService.instance = this;
     
     // ERC-20 Token ABI (minimal required functions)
     this.tokenABI = [
@@ -69,15 +75,23 @@ class PaymentService {
         logger.warn('Token address not configured - some payment features will be unavailable');
       }
 
-      // Initialize contract service
-      await this.contractService.initialize();
-      
+      // Get ContractService from ServiceManager if available
+      try {
+        const serviceManager = require('./ServiceManager');
+        if (serviceManager.hasService('ContractService')) {
+          this.contractService = serviceManager.getExistingService('ContractService');
+        }
+      } catch (error) {
+        logger.debug('ServiceManager not available, skipping ContractService dependency');
+      }
+
       this.initialized = true;
       logger.info('Payment service initialized successfully');
       
     } catch (error) {
-      logger.error('Failed to initialize payment service:', error);
-      throw new AppError('Payment service initialization failed', 500, 'PAYMENT_INIT_ERROR');
+      logger.warn('Payment service failed to initialize, continuing with fallback mode:', error.message);
+      this.initialized = false;
+      // Don't throw error, just continue
     }
   }
 

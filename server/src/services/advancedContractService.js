@@ -34,8 +34,21 @@ class AdvancedContractService {
    */
   async initialize() {
     try {
-      this.contractService = new ContractService();
-      await this.contractService.initialize();
+      // Get ContractService from ServiceManager
+      try {
+        const serviceManager = require('./ServiceManager');
+        if (serviceManager.hasService('ContractService')) {
+          this.contractService = serviceManager.getExistingService('ContractService');
+        } else {
+          // Fallback to singleton
+          const ContractService = require('./contractService');
+          this.contractService = ContractService.getInstance();
+        }
+      } catch (error) {
+        logger.warn('AdvancedContractService: Could not get ContractService from ServiceManager:', error.message);
+        const ContractService = require('./contractService');
+        this.contractService = ContractService.getInstance();
+      }
       
       this.provider = this.contractService.provider;
       

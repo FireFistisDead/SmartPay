@@ -5,7 +5,6 @@ const Event = require('../models/Event');
 const Job = require('../models/Job');
 const User = require('../models/User');
 const NotificationService = require('./notificationService');
-const ContractService = require('./contractService');
 const redisClient = require('../config/redis');
 const { AppError } = require('../middleware/errorHandler');
 
@@ -13,7 +12,7 @@ class BlockchainEventListener {
   constructor() {
     this.provider = null;
     this.contract = null;
-    this.contractService = new ContractService();
+    this.contractService = null; // Will be set via ServiceManager
     this.isListening = false;
     this.lastProcessedBlock = 0;
     this.retryAttempts = 0;
@@ -71,33 +70,53 @@ class BlockchainEventListener {
       
       // Initialize contract
       if (!config.blockchain.contractAddress) {
-        throw new AppError('Contract address not configured', 500, 'CONTRACT_ADDRESS_MISSING');
+        logger.warn('Contract address not configured - blockchain events disabled');
+        this.initialized = false;
+        return;
       }
       
       // Validate contract address format
-      if (!ethers.isAddress(config.blockchain.contractAddress)) {
-        throw new AppError('Invalid contract address format', 500, 'INVALID_CONTRACT_ADDRESS');
+      const contractAddress = config.blockchain.contractAddress.trim();
+      if (!contractAddress || contractAddress === 'undefined' || contractAddress === 'null') {
+        logger.warn('Invalid contract address - blockchain events disabled');
+        this.initialized = false;
+        return;
       }
       
-      this.contract = new ethers.Contract(
-        config.blockchain.contractAddress,
-        this.contractABI,
-        this.provider
-      );
+      try {
+        // Use ethers.getAddress for more robust validation
+        const validAddress = ethers.getAddress(contractAddress);
+        
+        this.contract = new ethers.Contract(
+          validAddress,
+          this.contractABI,
+          this.provider
+        );
+      } catch (addressError) {
+        logger.warn('Invalid contract address format - blockchain events disabled:', addressError.message);
+        this.initialized = false;
+        return;
+      }
       
-      // Test contract connection
+      // Test contract connection (non-blocking)
       try {
         await this.contract.getAddress();
+        logger.info('Contract connection test passed');
       } catch (error) {
-        throw new AppError('Contract not found at specified address', 500, 'CONTRACT_NOT_FOUND');
+        logger.warn('Contract connection test failed - blockchain events disabled:', error.message);
+        this.initialized = false;
+        return;
       }
       
-      // Initialize dependencies
+      // Get ContractService from ServiceManager
       try {
-        await this.contractService.initialize();
-        logger.info('ContractService initialized in BlockchainEventListener');
+        const serviceManager = require('./ServiceManager');
+        if (serviceManager.hasService('ContractService')) {
+          this.contractService = serviceManager.getExistingService('ContractService');
+          logger.debug('ContractService loaded from ServiceManager for BlockchainEventListener');
+        }
       } catch (error) {
-        logger.warn('ContractService initialization failed in BlockchainEventListener:', error.message);
+        logger.warn('ServiceManager not available for BlockchainEventListener:', error.message);
       }
       
       // Get last processed block from Redis or database
@@ -188,6 +207,12 @@ class BlockchainEventListener {
     try {
       await this.initialize();
       
+      // Only proceed if initialization was successful
+      if (!this.initialized || !this.contract) {
+        logger.warn('Blockchain event listener initialization failed - skipping event setup');
+        return;
+      }
+      
       // Process historical events first
       await this.processHistoricalEvents();
       
@@ -248,6 +273,12 @@ class BlockchainEventListener {
   }
 
   async processHistoricalEvents() {
+    // Ensure contract is available before processing events
+    if (!this.contract) {
+      logger.warn('Contract not available - skipping historical event processing');
+      return;
+    }
+
     try {
       const currentBlock = await this.provider.getBlockNumber();
       const startBlock = Math.max(this.lastProcessedBlock + 1, currentBlock - this.blockRange);
@@ -660,6 +691,12 @@ class BlockchainEventListener {
   }
 
   setupEventListeners() {
+    // Ensure contract is available before setting up listeners
+    if (!this.contract) {
+      logger.warn('Contract not available - skipping event listener setup');
+      return;
+    }
+
     // Listen for all events
     this.contract.on('*', async (event) => {
       try {
@@ -699,21 +736,27 @@ class BlockchainEventListener {
   emitRealtimeUpdate(event) {
     try {
       // Use WebSocketService if available
-      if (global.webSocketService && global.webSocketService.initialized) {
-        // Emit to specific job room
-        global.webSocketService.broadcastToRoom(`job_${event.jobId}`, 'jobUpdate', {
-          jobId: event.jobId,
-          eventName: event.eventName,
-          eventData: event.eventData,
-          timestamp: event.timestamp
-        });
-        
-        // Emit to general activity feed
-        global.webSocketService.broadcast('blockchainActivity', {
-          eventName: event.eventName,
-          jobId: event.jobId,
-          timestamp: event.timestamp
-        });
+      if (global.webSocketService && global.webSocketService.initialized && typeof global.webSocketService.broadcastToRoom === 'function') {
+        try {
+          // Emit to specific job room
+          global.webSocketService.broadcastToRoom(`job_${event.jobId}`, 'jobUpdate', {
+            jobId: event.jobId,
+            eventName: event.eventName,
+            eventData: event.eventData,
+            timestamp: event.timestamp
+          });
+          
+          // Emit to general activity feed
+          if (typeof global.webSocketService.broadcast === 'function') {
+            global.webSocketService.broadcast('blockchainActivity', {
+              eventName: event.eventName,
+              jobId: event.jobId,
+              timestamp: event.timestamp
+            });
+          }
+        } catch (wsError) {
+          logger.debug('WebSocket broadcast failed:', wsError.message);
+        }
       } 
       // Fallback to global.io if WebSocketService not available
       else if (global.io) {
@@ -778,12 +821,16 @@ class BlockchainEventListener {
       this.retryDelay = 5000;
       
       // Emit critical error event
-      if (global.webSocketService) {
-        global.webSocketService.broadcast('systemAlert', {
-          type: 'critical',
-          message: 'Blockchain event listener stopped',
-          timestamp: new Date().toISOString()
-        });
+      if (global.webSocketService && typeof global.webSocketService.broadcast === 'function') {
+        try {
+          global.webSocketService.broadcast('systemAlert', {
+            type: 'critical',
+            message: 'Blockchain event listener stopped',
+            timestamp: new Date().toISOString()
+          });
+        } catch (wsError) {
+          logger.debug('WebSocket broadcast failed:', wsError.message);
+        }
       }
     }
   }

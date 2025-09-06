@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 const logger = require('../utils/logger');
 const redisClient = require('../config/redis');
-const RBACService = require('./rbacService');
 const { AppError } = require('../middleware/errorHandler');
 
 /**
@@ -11,12 +10,19 @@ const { AppError } = require('../middleware/errorHandler');
  */
 class WebSocketService {
   constructor() {
+    // Singleton pattern to prevent duplicates
+    if (WebSocketService.instance) {
+      return WebSocketService.instance;
+    }
+    
     this.io = null;
     this.initialized = false;
     this.connectedUsers = new Map();
     this.userSockets = new Map();
     this.roomSubscriptions = new Map();
-    this.rbacService = new RBACService();
+    this.rbacService = null; // Will be set via ServiceManager
+    
+    WebSocketService.instance = this;
     
     // Event types
     this.events = {
@@ -93,8 +99,15 @@ class WebSocketService {
         transports: ['websocket', 'polling']
       });
 
-      // Initialize RBAC service
-      this.rbacService.initialize();
+      // Get RBAC service from ServiceManager
+      try {
+        const serviceManager = require('./ServiceManager');
+        if (serviceManager.hasService('RBACService')) {
+          this.rbacService = serviceManager.getExistingService('RBACService');
+        }
+      } catch (error) {
+        logger.warn('ServiceManager not available for WebSocket RBAC:', error.message);
+      }
       
       // Setup authentication middleware
       this.setupAuthentication();
