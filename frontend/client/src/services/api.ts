@@ -43,10 +43,22 @@ apiClient.interceptors.response.use(
 export const apiService = {
   // Authentication endpoints
   auth: {
+
+    // Traditional email/password authentication
+    signup: (userData: { fullName: string; email: string; password: string; role?: 'client' | 'freelancer' }) =>
+      apiClient.post('/users/signup', userData),
     login: (credentials: { email: string; password: string }) =>
+      apiClient.post('/users/login', credentials),
+    verifyEmail: (token: string) =>
+      apiClient.post('/users/verify-email', { token }),
+    resendVerification: (email: string) =>
+      apiClient.post('/users/resend-verification', { email }),
+    
+    // Blockchain authentication
+    blockchainLogin: (credentials: { email: string; password: string }) =>
       apiClient.post('/auth/login', credentials),
     register: (userData: { name: string; email: string; password: string; role?: string }) =>
-      apiClient.post('/auth/signup', userData),
+      apiClient.post('/auth/register', userData),
     simpleRegister: (userData: { address: string; username?: string; email?: string; roles?: string[] }) =>
       apiClient.post('/users/simple-register', userData),
     logout: () => apiClient.post('/auth/logout'),

@@ -12,6 +12,7 @@ import ParticleBackground from "@/components/particle-background";
 import { useSmartAnimations } from "@/hooks/use-smart-animations";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Types based on backend models
 interface User {
@@ -240,23 +241,44 @@ export default function ClientDashboard() {
   const [userStats, setUserStats] = useState<UserAnalytics | null>(null);
   const [topFreelancers, setTopFreelancers] = useState<User[]>([]);
 
-  // Get user display name
-  const getUserDisplayName = () => {
-    if (!userProfile) return "User";
-    
-    const extendedProfile = userProfile as any;
-    const firstName = extendedProfile.profile?.firstName;
-    const lastName = extendedProfile.profile?.lastName;
-    
-    if (firstName && lastName) {
-      return `${firstName} ${lastName}`;
-    } else if (firstName) {
-      return firstName;
-    } else if (extendedProfile.username) {
-      return extendedProfile.username;
-    } else {
-      return "User";
-    }
+
+  const { userProfile, loading: authLoading } = useAuth();
+  
+  // Function to extract first name from full name
+  const getFirstName = (fullName: string): string => {
+    if (!fullName) return 'User';
+    const spaceIndex = fullName.indexOf(' ');
+    return spaceIndex === -1 ? fullName : fullName.substring(0, spaceIndex);
+  };
+
+  // Get the user's first name (prefer profile.firstName)
+  // Safely access profile.firstName (cast to any to avoid mismatched shared type)
+  const firstName = userProfile
+    ? (
+        ((userProfile as any)?.profile?.firstName)
+          ? getFirstName((userProfile as any).profile.firstName)
+          : (getFirstName(userProfile.username || '') || getFirstName(userProfile.email?.split('@')[0] || ''))
+      )
+    : 'User';
+
+  // Show loading spinner while authenticating
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-lg text-muted-foreground">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Current user for API calls
+  const currentUser = {
+    address: userProfile?.id || "0x742d35Cc6641C0532a2100D35458f8b5d9E2F",
+    username: userProfile?.username || "client_user",
+    roles: ["client"] as const,
+
   };
 
   // API functions
@@ -477,16 +499,19 @@ export default function ClientDashboard() {
               
               <div className="flex items-center space-x-3 px-3 py-2 glass-morphism rounded-xl border border-border/50">
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src={(userProfile as any)?.profile?.avatar || ""} />
-                  <AvatarFallback className="bg-gradient-to-r from-primary/20 to-secondary/20">
-                    {getUserDisplayName().substring(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="text-sm">
-                  <p className="font-medium">{getUserDisplayName()}</p>
-                  <p className="text-muted-foreground text-xs">
-                    {userProfile?.email ? userProfile.email.substring(0, 10) + "..." : "Client"}
-                  </p>
+          <AvatarImage src={(userProfile as any)?.profile?.avatar || ""} />
+          <AvatarFallback className="bg-gradient-to-r from-primary/20 to-secondary/20">
+            {(() => {
+              const displayName = getUserDisplayName();
+              return displayName.substring(0, 2).toUpperCase();
+            })()}
+          </AvatarFallback>
+          </Avatar>
+          <div className="text-sm">
+            <p className="font-medium">{getUserDisplayName()}</p>
+            <p className="text-muted-foreground text-xs">
+              {userProfile?.email ? userProfile.email.substring(0, 10) + "..." : "Client"}
+            </p>
                 </div>
               </div>
               
@@ -602,7 +627,9 @@ export default function ClientDashboard() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h1 className="text-4xl font-bold mb-2 gradient-text">
+
                     Welcome back, {getUserDisplayName()}! 👋
+
                   </h1>
                   <p className="text-lg text-muted-foreground">
                     Manage your projects and track milestone progress from your decentralized dashboard.

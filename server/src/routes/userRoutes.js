@@ -130,6 +130,122 @@ router.post('/register',
 );
 
 /**
+ * @route   POST /api/users/simple-register
+ * @desc    Simple user registration for testing (without signature)
+ * @access  Public
+ */
+router.post('/simple-register',
+  body('address')
+    .matches(/^0x[a-fA-F0-9]{40}$/)
+    .withMessage('Invalid Ethereum address'),
+  body('username')
+    .optional()
+    .trim()
+    .isLength({ min: 3, max: 50 })
+    .withMessage('Username must be between 3 and 50 characters'),
+  body('email')
+    .optional()
+    .isEmail()
+    .withMessage('Invalid email format'),
+  validate,
+  catchAsync(userController.simpleRegister)
+);
+
+/**
+ * @route   POST /api/users/signup
+ * @desc    Traditional signup with email and password
+ * @access  Public
+ */
+router.post('/signup',
+  body('fullName')
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Full name must be between 2 and 100 characters'),
+  body('email')
+    .isEmail()
+    .withMessage('Invalid email format'),
+  body('password')
+    .isLength({ min: 6, max: 100 })
+    .withMessage('Password must be between 6 and 100 characters'),
+  body('role')
+    .optional()
+    .isIn(['client', 'freelancer'])
+    .withMessage('Role must be either client or freelancer'),
+  validate,
+  catchAsync(userController.traditionalSignup)
+);
+
+/**
+ * @route   POST /api/users/login
+ * @desc    Traditional login with email and password
+ * @access  Public
+ */
+router.post('/login',
+  body('email')
+    .isEmail()
+    .withMessage('Invalid email format'),
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required'),
+  validate,
+  catchAsync(userController.traditionalLogin)
+);
+
+/**
+ * @route   POST /api/users/forgot-password
+ * @desc    Initiate password reset process
+ * @access  Public
+ */
+router.post('/forgot-password',
+  body('email')
+    .isEmail()
+    .withMessage('Invalid email format'),
+  validate,
+  catchAsync(userController.forgotPassword)
+);
+
+/**
+ * @route   POST /api/users/reset-password
+ * @desc    Complete password reset with new password
+ * @access  Public
+ */
+router.post('/reset-password',
+  body('email')
+    .isEmail()
+    .withMessage('Invalid email format'),
+  body('newPassword')
+    .isLength({ min: 6, max: 100 })
+    .withMessage('Password must be between 6 and 100 characters'),
+  validate,
+  catchAsync(userController.resetPassword)
+);
+
+/**
+ * @route   POST /api/users/verify-email
+ * @desc    Update email verification status after Firebase verification
+ * @access  Private
+ */
+router.post('/verify-email',
+  authenticate,
+  body('firebaseUID')
+    .optional()
+    .isString()
+    .withMessage('Firebase UID must be a string'),
+  validate,
+  catchAsync(userController.verifyEmail)
+);
+
+/**
+ * @route   POST /api/users/resend-verification
+ * @desc    Get user info for Firebase verification
+ * @access  Private
+ */
+router.post('/resend-verification',
+  authenticate,
+  catchAsync(userController.resendVerificationEmail)
+);
+
+/**
  * @route   GET /api/users/me
  * @desc    Get current user profile
  * @access  Private

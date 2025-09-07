@@ -4,15 +4,20 @@ const userSchema = new mongoose.Schema({
   // Blockchain Identity
   address: {
     type: String,
+
     // Make blockchain address optional for email/password users. When present, validate format.
     required: false,
+
     unique: true,
     sparse: true,
     lowercase: true,
+    sparse: true, // Allow null but unique if present - this should handle multiple nulls
     validate: {
       validator: function(v) {
+
         if (!v) return true;
         return /^0x[a-fA-F0-9]{40}$/.test(v);
+
       },
       message: 'Invalid Ethereum address'
     }
@@ -38,6 +43,34 @@ const userSchema = new mongoose.Schema({
       },
       message: 'Invalid email format'
     }
+  },
+
+  // Email verification
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  },
+  emailVerificationToken: {
+    type: String,
+    select: false // Don't return in queries by default
+  },
+  emailVerificationExpires: {
+    type: Date,
+    select: false
+  },
+
+  // Password for traditional authentication
+  password: {
+    type: String,
+    minlength: 6,
+    select: false // Don't return password in queries by default
+  },
+
+  // Firebase Authentication
+  firebaseUID: {
+    type: String,
+    unique: true,
+    sparse: true // Allow null but unique if present
   },
   
   // Local auth password (bcrypt hash)
@@ -97,8 +130,8 @@ const userSchema = new mongoose.Schema({
   // User Roles and Capabilities
   roles: [{
     type: String,
-    enum: ['guest', 'user', 'freelancer', 'client', 'moderator', 'admin', 'super_admin'],
-    default: 'user'
+    enum: ['freelancer', 'client'],
+    default: 'freelancer'
   }],
   
   // RBAC and Security
@@ -161,8 +194,10 @@ const userSchema = new mongoose.Schema({
     },
     availability: {
       type: String,
+
       enum: ['available', 'full-time', 'part-time', 'contract', 'not-available'],
       default: 'available'
+
     },
     portfolio: [{
       title: String,

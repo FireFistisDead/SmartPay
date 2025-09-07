@@ -1,5 +1,5 @@
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { useState } from "react";
 import { useLocation } from "wouter";
 import { useDashboardNavigation } from "@/hooks/use-dashboard-navigation";
 import { 
@@ -58,6 +58,7 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import ParticleBackground from "@/components/particle-background";
 import { useSmartAnimations } from "@/hooks/use-smart-animations";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Skill {
   name: string;
@@ -105,20 +106,41 @@ export default function FreelancerProfileSettings() {
   const { scrollMetrics, isSlowScrolling } = useSmartAnimations();
   const shouldAnimate = !scrollMetrics.isScrolling || isSlowScrolling;
 
-  const [profileData, setProfileData] = useState({
-    firstName: "Alex",
-    lastName: "Thompson",
-    email: "alex.thompson@example.com",
-    phone: "+1 (555) 987-6543",
-    location: "Austin, TX",
-    title: "Full-Stack Web3 Developer",
-    bio: "Passionate full-stack developer specializing in blockchain technology, DeFi protocols, and modern web applications. 5+ years of experience building scalable solutions.",
-    hourlyRate: "75",
-    availability: "full-time",
-    timezone: "America/Chicago",
-    languages: ["English (Native)", "Spanish (Conversational)"],
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=alex"
-  });
+  const { userProfile, refreshProfile } = useAuth();
+
+  const [profileData, setProfileData] = useState(() => ({
+    firstName: (userProfile as any)?.profile?.firstName || (userProfile as any)?.firstName || "",
+    lastName: (userProfile as any)?.profile?.lastName || (userProfile as any)?.lastName || "",
+    email: userProfile?.email || "",
+    phone: (userProfile as any)?.profile?.phone || "",
+    location: (userProfile as any)?.profile?.location || "",
+    title: (userProfile as any)?.profile?.title || "",
+    bio: (userProfile as any)?.profile?.bio || "",
+    hourlyRate: (userProfile as any)?.profile?.hourlyRate || "",
+    availability: (userProfile as any)?.settings?.preferences?.availability || "full-time",
+    timezone: (userProfile as any)?.profile?.timezone || "America/Chicago",
+    languages: (userProfile as any)?.profile?.languages || ["English (Native)"],
+    avatar: (userProfile as any)?.profile?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${(userProfile as any)?.username || 'freelancer'}`
+  }));
+
+  React.useEffect(() => {
+    if (userProfile) {
+      setProfileData({
+        firstName: (userProfile as any)?.profile?.firstName || (userProfile as any)?.firstName || "",
+        lastName: (userProfile as any)?.profile?.lastName || (userProfile as any)?.lastName || "",
+        email: userProfile?.email || "",
+        phone: (userProfile as any)?.profile?.phone || "",
+        location: (userProfile as any)?.profile?.location || "",
+        title: (userProfile as any)?.profile?.title || "",
+        bio: (userProfile as any)?.profile?.bio || "",
+        hourlyRate: (userProfile as any)?.profile?.hourlyRate || "",
+        availability: (userProfile as any)?.settings?.preferences?.availability || "full-time",
+        timezone: (userProfile as any)?.profile?.timezone || "America/Chicago",
+        languages: (userProfile as any)?.profile?.languages || ["English (Native)"],
+        avatar: (userProfile as any)?.profile?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${(userProfile as any)?.username || 'freelancer'}`
+      });
+    }
+  }, [userProfile]);
 
   const [skills, setSkills] = useState<Skill[]>([
     { name: "React.js", level: 95, yearsOfExperience: 4 },
@@ -211,8 +233,28 @@ export default function FreelancerProfileSettings() {
   };
 
   const handleProfileUpdate = () => {
-    console.log("Saving freelancer profile:", { profileData, skills, portfolioItems, workExperience, socialLinks });
-    alert("Profile updated successfully!");
+    (async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        const res = await fetch(`${(import.meta as any).env.VITE_API_URL || 'http://localhost:3001'}/api/users/me`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({ profile: { ...profileData, languages: profileData.languages }, username: (userProfile as any)?.username })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to update profile');
+  localStorage.setItem('userProfile', JSON.stringify(data.data.user));
+  try { await refreshProfile(); } catch (e) {}
+  alert('Profile updated successfully!');
+      } catch (err: any) {
+        console.error('Freelancer profile update failed', err);
+        alert(err.message || 'Profile update failed');
+      }
+    })();
   };
 
   const handlePasswordChange = () => {
@@ -241,6 +283,27 @@ export default function FreelancerProfileSettings() {
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
+  };
+
+  const handleSaveSettings = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await fetch(`${(import.meta as any).env.VITE_API_URL || 'http://localhost:3001'}/api/users/me/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ preferences: { theme }, emailNotifications: notifications })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to update settings');
+      localStorage.setItem('userSettings', JSON.stringify(data.data.settings || {}));
+      alert('Settings updated successfully');
+    } catch (err: any) {
+      console.error('Settings update failed', err);
+      alert(err.message || 'Settings update failed');
+    }
   };
 
   return (
