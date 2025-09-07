@@ -30,6 +30,7 @@ const milestoneRoutes = require('./routes/milestoneRoutes');
 const ipfsRoutes = require('./routes/ipfsRoutes');
 const disputeRoutes = require('./routes/disputeRoutes');
 const userRoutes = require('./routes/userRoutes');
+const authRoutes = require('./routes/authRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const advancedRoutes = require('./routes/advancedRoutes');
@@ -42,7 +43,12 @@ class Server {
     this.server = http.createServer(this.app);
     this.io = new SocketServer(this.server, {
       cors: {
-        origin: process.env.FRONTEND_URL || "http://localhost:3000",
+        origin: [
+          "http://localhost:3000",
+          "http://localhost:5000", 
+          "http://localhost:5173",
+          process.env.FRONTEND_URL
+        ].filter(Boolean),
         methods: ["GET", "POST"]
       }
     });
@@ -71,7 +77,12 @@ class Server {
     
     // CORS
     this.app.use(cors({
-      origin: process.env.FRONTEND_URL || "http://localhost:3000",
+      origin: [
+        "http://localhost:3000",
+        "http://localhost:5000", 
+        "http://localhost:5173",
+        process.env.FRONTEND_URL
+      ].filter(Boolean),
       credentials: true
     }));
 
@@ -156,6 +167,7 @@ class Server {
     this.app.use('/api/ipfs', ipfsRoutes);
     this.app.use('/api/disputes', disputeRoutes);
     this.app.use('/api/users', userRoutes);
+    this.app.use('/api/auth', authRoutes);
     this.app.use('/api/analytics', analyticsRoutes);
     this.app.use('/api/payments', paymentRoutes);
     this.app.use('/api/advanced', advancedRoutes);

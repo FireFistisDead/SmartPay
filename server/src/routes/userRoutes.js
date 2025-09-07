@@ -1,6 +1,6 @@
 const express = require('express');
 const { body, param, query } = require('express-validator');
-const { authenticate, verifySignature, optionalAuth } = require('../middleware/auth');
+const { authenticate, authenticateJWT, verifySignature, optionalAuth } = require('../middleware/auth');
 const { catchAsync } = require('../middleware/errorHandler');
 const userController = require('../controllers/userController');
 const { validate } = require('../middleware/validation');
@@ -135,7 +135,7 @@ router.post('/register',
  * @access  Private
  */
 router.get('/me',
-  authenticate,
+  authenticateJWT,
   catchAsync(userController.getCurrentUser)
 );
 
@@ -145,7 +145,7 @@ router.get('/me',
  * @access  Private
  */
 router.put('/me',
-  authenticate,
+  authenticateJWT,
   updateProfileValidation,
   validate,
   catchAsync(userController.updateProfile)

@@ -1,8 +1,35 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useDashboardNavigation } from "@/hooks/use-dashboard-navigation";
-import { 
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+
+// Extended user profile type to match backend structure
+interface ExtendedUserProfile {
+  id: string;
+  username: string;
+  email: string;
+  roles: string[];
+  profile?: {
+    firstName?: string;
+    lastName?: string;
+    bio?: string;
+    avatar?: string;
+    location?: string;
+    timezone?: string;
+    website?: string;
+    phone?: string;
+    company?: string;
+    socialLinks?: {
+      github?: string;
+      linkedin?: string;
+      twitter?: string;
+      portfolio?: string;
+    };
+  };
+}
+import {
   ArrowLeft,
   User,
   Settings,
@@ -47,9 +74,12 @@ import { useSmartAnimations } from "@/hooks/use-smart-animations";
 export default function ProfileSettings() {
   const [, setLocation] = useLocation();
   const { goToDashboard } = useDashboardNavigation();
+  const { userProfile, updateProfile, refreshProfile } = useAuth();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("profile");
   const [showPassword, setShowPassword] = useState(false);
   const [theme, setTheme] = useState("system");
+  const [isLoading, setIsLoading] = useState(false);
   const [notifications, setNotifications] = useState({
     email: true,
     push: true,
@@ -63,22 +93,73 @@ export default function ProfileSettings() {
   const shouldAnimate = !scrollMetrics.isScrolling || isSlowScrolling;
 
   const [profileData, setProfileData] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567",
-    location: "San Francisco, CA",
-    company: "Tech Innovations Inc.",
-    bio: "Experienced client looking for top-tier development talent for blockchain and web3 projects.",
-    website: "https://techinnovations.com",
-    linkedin: "https://linkedin.com/in/johndoe",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=john"
+    firstName: "",
+    lastName: "",
+    username: "",
+    email: "",
+    phone: "",
+    location: "",
+    company: "",
+    bio: "",
+    website: "",
+    linkedin: "",
+    avatar: ""
   });
 
-  const handleProfileUpdate = () => {
-    // Save profile data
-    console.log("Saving profile:", profileData);
-    alert("Profile updated successfully!");
+  // Load user profile data when component mounts or userProfile changes
+  useEffect(() => {
+    if (userProfile) {
+      // Cast to extended type to access profile properties
+      const extendedProfile = userProfile as unknown as ExtendedUserProfile;
+      setProfileData({
+        firstName: extendedProfile.profile?.firstName || "",
+        lastName: extendedProfile.profile?.lastName || "",
+        username: extendedProfile.username || "",
+        email: extendedProfile.email || "",
+        phone: extendedProfile.profile?.phone || "",
+        location: extendedProfile.profile?.location || "",
+        company: extendedProfile.profile?.company || "",
+        bio: extendedProfile.profile?.bio || "",
+        website: extendedProfile.profile?.website || "",
+        linkedin: extendedProfile.profile?.socialLinks?.linkedin || "",
+        avatar: extendedProfile.profile?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${extendedProfile.username}`
+      });
+    }
+  }, [userProfile]);
+
+  const handleProfileUpdate = async () => {
+    setIsLoading(true);
+    try {
+      await updateProfile({
+        username: profileData.username,
+        profile: {
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
+          phone: profileData.phone,
+          location: profileData.location,
+          company: profileData.company,
+          bio: profileData.bio,
+          website: profileData.website,
+          socialLinks: {
+            linkedin: profileData.linkedin
+          },
+          avatar: profileData.avatar
+        }
+      });
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePasswordChange = () => {
@@ -94,7 +175,7 @@ export default function ProfileSettings() {
   const handleExportData = () => {
     // Export user data
     const userData = {
-      profile: profileData,
+      profile: userProfile,
       settings: { theme, notifications },
       exportDate: new Date().toISOString()
     };
@@ -179,7 +260,8 @@ export default function ProfileSettings() {
                     <Avatar className="w-32 h-32">
                       <AvatarImage src={profileData.avatar} alt="Profile" />
                       <AvatarFallback className="text-2xl">
-                        {profileData.firstName[0]}{profileData.lastName[0]}
+                        {/* CORRECTED: Safely access first character to prevent crash */}
+                        {profileData.firstName?.[0]}{profileData.lastName?.[0]}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex space-x-2">
@@ -218,6 +300,20 @@ export default function ProfileSettings() {
                           value={profileData.lastName}
                           onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
                           className="glass-morphism"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* ADDED: Input for username (disabled) */}
+                    <div>
+                      <Label htmlFor="username">Username</Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <Input
+                          id="username"
+                          value={profileData.username}
+                          className="glass-morphism pl-10"
+                          disabled
                         />
                       </div>
                     </div>
@@ -275,6 +371,36 @@ export default function ProfileSettings() {
                       </div>
                     </div>
 
+                    {/* ADDED: Inputs for website and linkedin */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="website">Website</Label>
+                        <div className="relative">
+                          <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                          <Input
+                            id="website"
+                            value={profileData.website}
+                            onChange={(e) => setProfileData({ ...profileData, website: e.target.value })}
+                            className="glass-morphism pl-10"
+                            placeholder="https://example.com"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="linkedin">LinkedIn</Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                          <Input
+                            id="linkedin"
+                            value={profileData.linkedin}
+                            onChange={(e) => setProfileData({ ...profileData, linkedin: e.target.value })}
+                            className="glass-morphism pl-10"
+                            placeholder="linkedin.com/in/username"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                     <div>
                       <Label htmlFor="bio">Bio</Label>
                       <Textarea
@@ -286,9 +412,13 @@ export default function ProfileSettings() {
                       />
                     </div>
 
-                    <Button onClick={handleProfileUpdate} className="w-full bg-gradient-to-r from-primary to-secondary">
+                    <Button 
+                      onClick={handleProfileUpdate} 
+                      disabled={isLoading}
+                      className="w-full bg-gradient-to-r from-primary to-secondary"
+                    >
                       <Save className="w-4 h-4 mr-2" />
-                      Save Profile
+                      {isLoading ? "Saving..." : "Save Profile"}
                     </Button>
                   </CardContent>
                 </Card>

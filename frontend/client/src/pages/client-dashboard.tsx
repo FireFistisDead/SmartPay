@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLocation } from "wouter";
 import ParticleBackground from "@/components/particle-background";
 import { useSmartAnimations } from "@/hooks/use-smart-animations";
+import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 
 // Types based on backend models
@@ -229,6 +230,7 @@ const ProjectCard = ({
 export default function ClientDashboard() {
   const [, setLocation] = useLocation();
   const { calculateAnimationConfig, getViewportConfig } = useSmartAnimations();
+  const { userProfile } = useAuth();
   const [activeTab, setActiveTab] = useState("projects");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -238,11 +240,23 @@ export default function ClientDashboard() {
   const [userStats, setUserStats] = useState<UserAnalytics | null>(null);
   const [topFreelancers, setTopFreelancers] = useState<User[]>([]);
 
-  // Mock user data - replace with actual auth context
-  const currentUser = {
-    address: "0x742d35Cc6641C0532a2100D35458f8b5d9E2F",
-    username: "client_user",
-    roles: ["client"] as const,
+  // Get user display name
+  const getUserDisplayName = () => {
+    if (!userProfile) return "User";
+    
+    const extendedProfile = userProfile as any;
+    const firstName = extendedProfile.profile?.firstName;
+    const lastName = extendedProfile.profile?.lastName;
+    
+    if (firstName && lastName) {
+      return `${firstName} ${lastName}`;
+    } else if (firstName) {
+      return firstName;
+    } else if (extendedProfile.username) {
+      return extendedProfile.username;
+    } else {
+      return "User";
+    }
   };
 
   // API functions
@@ -257,7 +271,7 @@ export default function ClientDashboard() {
           description: "Build a modern e-commerce platform with React and Node.js",
           category: "development",
           skills: ["React", "Node.js", "MongoDB", "Express"],
-          client: currentUser.address,
+          client: userProfile?.id || "unknown",
           freelancer: "0x8ba1f109551bD432803012645Hac136c0532",
           arbiter: "0x9ca2f220662bE432803345645Hac147d0643",
           totalAmount: "12.5",
@@ -280,7 +294,7 @@ export default function ClientDashboard() {
           description: "Comprehensive security audit of DeFi smart contracts",
           category: "development",
           skills: ["Solidity", "Security", "Ethereum", "Web3"],
-          client: currentUser.address,
+          client: userProfile?.id || "unknown",
           freelancer: "0x7ba3f331773cD543903012645Hac258e0754",
           arbiter: "0x6ca4f442884dE654904123456Hac369f0865",
           totalAmount: "18.0",
@@ -463,12 +477,16 @@ export default function ClientDashboard() {
               
               <div className="flex items-center space-x-3 px-3 py-2 glass-morphism rounded-xl border border-border/50">
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src="" />
-                  <AvatarFallback className="bg-gradient-to-r from-primary/20 to-secondary/20">JD</AvatarFallback>
+                  <AvatarImage src={(userProfile as any)?.profile?.avatar || ""} />
+                  <AvatarFallback className="bg-gradient-to-r from-primary/20 to-secondary/20">
+                    {getUserDisplayName().substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="text-sm">
-                  <p className="font-medium">John Doe</p>
-                  <p className="text-muted-foreground text-xs">0x742d...8bE2</p>
+                  <p className="font-medium">{getUserDisplayName()}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {userProfile?.email ? userProfile.email.substring(0, 10) + "..." : "Client"}
+                  </p>
                 </div>
               </div>
               
@@ -584,7 +602,7 @@ export default function ClientDashboard() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h1 className="text-4xl font-bold mb-2 gradient-text">
-                    Welcome back, John! 👋
+                    Welcome back, {getUserDisplayName()}! 👋
                   </h1>
                   <p className="text-lg text-muted-foreground">
                     Manage your projects and track milestone progress from your decentralized dashboard.

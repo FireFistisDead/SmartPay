@@ -4,11 +4,14 @@ const userSchema = new mongoose.Schema({
   // Blockchain Identity
   address: {
     type: String,
-    required: true,
+    // Make blockchain address optional for email/password users. When present, validate format.
+    required: false,
     unique: true,
+    sparse: true,
     lowercase: true,
     validate: {
       validator: function(v) {
+        if (!v) return true;
         return /^0x[a-fA-F0-9]{40}$/.test(v);
       },
       message: 'Invalid Ethereum address'
@@ -35,6 +38,12 @@ const userSchema = new mongoose.Schema({
       },
       message: 'Invalid email format'
     }
+  },
+  
+  // Local auth password (bcrypt hash)
+  password: {
+    type: String,
+    select: false,
   },
   
   // Profile Details
@@ -152,7 +161,7 @@ const userSchema = new mongoose.Schema({
     },
     availability: {
       type: String,
-      enum: ['full-time', 'part-time', 'contract', 'not-available'],
+      enum: ['available', 'full-time', 'part-time', 'contract', 'not-available'],
       default: 'available'
     },
     portfolio: [{
