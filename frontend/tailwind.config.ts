@@ -120,20 +120,15 @@
 //   plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 // } satisfies Config;
 
-
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
 
 const config = {
   darkMode: ["class"],
-  // CORRECTED PATHS:
-  // The original paths were not pointing to the 'client/src' directory
-  // where your actual source code resides. This change ensures Tailwind
-  // scans the correct files for CSS classes.
   content: [
-    './client/pages/**/*.{ts,tsx}',
-    './client/components/**/*.{ts,tsx}',
-    './client/app/**/*.{ts,tsx}',
-    './client/src/**/*.{ts,tsx}',
+    "./client/pages/**/*.{ts,tsx,js,jsx}",
+    "./client/components/**/*.{ts,tsx,js,jsx}",
+    "./client/app/**/*.{ts,tsx,js,jsx}",
+    "./client/src/**/*.{ts,tsx,js,jsx}",
   ],
   prefix: "",
   theme: {
@@ -194,14 +189,43 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        float: {
+          "0%, 100%": { transform: "translateY(0px) rotate(0deg)" },
+          "50%": { transform: "translateY(-20px) rotate(180deg)" },
+        },
+        glow: {
+          from: { boxShadow: "0 0 20px hsl(262 83% 58% / 0.5)" },
+          to: {
+            boxShadow:
+              "0 0 40px hsl(262 83% 58% / 0.8), 0 0 60px hsl(195 100% 50% / 0.3)",
+          },
+        },
+        slideUp: {
+          from: { opacity: "0", transform: "translateY(50px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        fadeIn: {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        scroll: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        float: "float 4s ease-in-out infinite",
+        glow: "glow 2s ease-in-out infinite alternate",
+        "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "slide-up": "slideUp 0.5s ease-out forwards",
+        "fade-in": "fadeIn 0.6s ease-out forwards",
+        scroll: "scroll 30s linear infinite",
       },
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
+} satisfies Config;
 
-export default config
+export default config;
