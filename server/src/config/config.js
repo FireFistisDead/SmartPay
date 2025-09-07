@@ -7,7 +7,7 @@ const config = {
   
   // Database Configuration
   mongodb: {
-    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/freelance_escrow',
+    uri: process.env.MONGODB_URI || 'mongodb+srv://bhav:Y%40sh1234@smartpay.jbzwr4r.mongodb.net/?retryWrites=true&w=majority&appName=SmartPay',
     options: {
       useNewUrlParser: true,
       useUnifiedTopology: true,

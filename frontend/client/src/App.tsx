@@ -9,6 +9,7 @@ import { ProtectedRoute, ClientOnlyRoute, FreelancerOnlyRoute } from "@/componen
 import Home from "@/pages/home";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
+import EmailVerified from "@/pages/email-verified";
 import ForgotPassword from "@/pages/forgot-password";
 import ClientDashboard from "@/pages/client-dashboard";
 import FreelancerDashboard from "@/pages/freelancer-dashboard";
@@ -51,6 +52,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
+      <Route path="/email-verified" component={EmailVerified} />
       <Route path="/forgot-password" component={ForgotPassword} />
       
       {/* General Dashboard Route */}

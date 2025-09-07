@@ -11,6 +11,7 @@ import { useLocation } from "wouter";
 import ParticleBackground from "@/components/particle-background";
 import { useSmartAnimations } from "@/hooks/use-smart-animations";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Types based on backend models
 interface User {
@@ -238,10 +239,41 @@ export default function ClientDashboard() {
   const [userStats, setUserStats] = useState<UserAnalytics | null>(null);
   const [topFreelancers, setTopFreelancers] = useState<User[]>([]);
 
-  // Mock user data - replace with actual auth context
+  const { userProfile, loading: authLoading } = useAuth();
+  
+  // Function to extract first name from full name
+  const getFirstName = (fullName: string): string => {
+    if (!fullName) return 'User';
+    const spaceIndex = fullName.indexOf(' ');
+    return spaceIndex === -1 ? fullName : fullName.substring(0, spaceIndex);
+  };
+
+  // Get the user's first name (prefer profile.firstName)
+  // Safely access profile.firstName (cast to any to avoid mismatched shared type)
+  const firstName = userProfile
+    ? (
+        ((userProfile as any)?.profile?.firstName)
+          ? getFirstName((userProfile as any).profile.firstName)
+          : (getFirstName(userProfile.username || '') || getFirstName(userProfile.email?.split('@')[0] || ''))
+      )
+    : 'User';
+
+  // Show loading spinner while authenticating
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-lg text-muted-foreground">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Current user for API calls
   const currentUser = {
-    address: "0x742d35Cc6641C0532a2100D35458f8b5d9E2F",
-    username: "client_user",
+    address: userProfile?.id || "0x742d35Cc6641C0532a2100D35458f8b5d9E2F",
+    username: userProfile?.username || "client_user",
     roles: ["client"] as const,
   };
 
@@ -463,12 +495,28 @@ export default function ClientDashboard() {
               
               <div className="flex items-center space-x-3 px-3 py-2 glass-morphism rounded-xl border border-border/50">
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src="" />
-                  <AvatarFallback className="bg-gradient-to-r from-primary/20 to-secondary/20">JD</AvatarFallback>
+                  <AvatarImage src={(userProfile as any)?.profile?.avatar || ''} />
+                  <AvatarFallback className="bg-gradient-to-r from-primary/20 to-secondary/20">
+                    {(() => {
+                      const p = (userProfile as any)?.profile;
+                      const first = p?.firstName || userProfile?.username || userProfile?.email?.split('@')[0] || 'U';
+                      const last = p?.lastName || '';
+                      const a = (first || '').toString();
+                      const b = (last || '').toString();
+                      if (b) return `${a[0]?.toUpperCase() || ''}${b[0]?.toUpperCase() || ''}`;
+                      const parts = a.split(' ');
+                      if (parts.length > 1) return `${parts[0][0]?.toUpperCase() || ''}${parts[1][0]?.toUpperCase() || ''}`;
+                      return (a[0] || 'U').toUpperCase();
+                    })()}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="text-sm">
-                  <p className="font-medium">John Doe</p>
-                  <p className="text-muted-foreground text-xs">0x742d...8bE2</p>
+                  <p className="font-medium">{(userProfile as any)?.profile?.firstName || userProfile?.username || userProfile?.email?.split('@')[0] || 'User'}</p>
+                  <p className="text-muted-foreground text-xs">{(() => {
+                    const addr = (userProfile as any)?.address || userProfile?.id || '';
+                    if (!addr) return '';
+                    return `${addr.slice(0,6)}...${addr.slice(-4)}`;
+                  })()}</p>
                 </div>
               </div>
               
@@ -584,7 +632,7 @@ export default function ClientDashboard() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h1 className="text-4xl font-bold mb-2 gradient-text">
-                    Welcome back, John! 👋
+                    Welcome back, {firstName}! 👋
                   </h1>
                   <p className="text-lg text-muted-foreground">
                     Manage your projects and track milestone progress from your decentralized dashboard.

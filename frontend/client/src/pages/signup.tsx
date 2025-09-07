@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Wallet, Users, Briefcase, ArrowRight, User, Mail, Lock, Eye, EyeOff, Home } from "lucide-react";
 import ParticleBackground from "@/components/particle-background";
+import api from "@/services/api";
+import firebaseAuthService from "@/firebase/authService";
 
 const FloatingIcon = ({ icon, className, delay = 0 }: { icon: React.ReactNode; className: string; delay?: number }) => (
   <motion.div
@@ -47,6 +49,8 @@ export default function Signup() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isTabSwitch, setIsTabSwitch] = useState(false);
+  const [emailVerificationSent, setEmailVerificationSent] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<"pending" | "verified" | "error">("pending");
   const tabTimerRef = useRef<number | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -70,7 +74,7 @@ export default function Signup() {
     }
   }, []);
 
-  const handleSignup = (role: "client" | "freelancer") => {
+  const handleSignup = async (role: "client" | "freelancer") => {
     if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword) {
       setErrorMessage("Please fill in all fields");
       setTimeout(() => setErrorMessage(""), 3000);
@@ -96,18 +100,149 @@ export default function Signup() {
     }
 
     setIsLoading(true);
-    // Simulate account creation process
-    setTimeout(() => {
-      // In production, this would handle actual account creation
-      localStorage.setItem("userRole", role);
-      if (role === "client") {
-        setLocation("/client-dashboard");
-      } else if (role === "freelancer") {
-        setLocation("/freelancer-dashboard");
-      } else {
-        setLocation("/dashboard");
+    setErrorMessage("");
+
+    try {
+      // Step 1: Register with our backend
+      const backendResponse = await api.post('/users/signup', {
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        role: role
+      });
+
+      if (!backendResponse.data.success) {
+        throw new Error(backendResponse.data.message || 'Registration failed');
       }
-    }, 2000);
+
+      // Step 2: Create Firebase user for email verification
+      const firebaseResult = await firebaseAuthService.createUser(formData.email, formData.password);
+      
+      if (!firebaseResult.success) {
+        throw new Error(firebaseResult.error || 'Firebase registration failed');
+      }
+
+      // Step 3: Send email verification
+      if (firebaseResult.user) {
+        const verificationResult = await firebaseAuthService.sendEmailVerification(firebaseResult.user);
+        
+        if (verificationResult.success) {
+          setEmailVerificationSent(true);
+          setActiveTab("verification");
+          
+          // Store user data and start verification check
+          localStorage.setItem("pendingUserData", JSON.stringify({
+            token: backendResponse.data.data.token,
+            user: backendResponse.data.data.user,
+            role: role,
+            firebaseUID: firebaseResult.user.uid
+          }));
+
+          // Start checking for email verification
+          startVerificationCheck(firebaseResult.user);
+        } else {
+          throw new Error('Failed to send verification email');
+        }
+      }
+
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      setErrorMessage(error.message || 'Registration failed. Please try again.');
+      setTimeout(() => setErrorMessage(""), 5000);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const startVerificationCheck = (firebaseUser: any) => {
+    console.log('Starting verification check for user:', firebaseUser.uid);
+    
+    const checkInterval = setInterval(async () => {
+      try {
+        // Get current Firebase user and reload to get latest verification status
+        const currentUser = firebaseAuthService.getCurrentUser();
+        if (currentUser) {
+          console.log('Checking verification status...');
+          await firebaseAuthService.reloadUser();
+          
+          const isVerified = firebaseAuthService.isEmailVerified();
+          console.log('Firebase email verified status:', isVerified);
+          
+          if (isVerified) {
+            console.log('Email verified! Updating backend...');
+            // Email is verified, update our backend
+            const pendingData = localStorage.getItem("pendingUserData");
+            if (pendingData) {
+              const userData = JSON.parse(pendingData);
+              
+              try {
+                // Update backend verification status
+                const verifyResponse = await api.post('/users/verify-email', 
+                  { firebaseUID: userData.firebaseUID },
+                  { headers: { Authorization: `Bearer ${userData.token}` } }
+                );
+
+                console.log('Backend verification response:', verifyResponse.data);
+
+                if (verifyResponse.data.success) {
+                  // Update the stored token with the new one that has verified status
+                  localStorage.setItem("authToken", verifyResponse.data.data.token);
+                  
+                  // Clear pending data and redirect
+                  localStorage.removeItem("pendingUserData");
+                  localStorage.setItem("userRole", userData.role);
+                  
+                  setVerificationStatus("verified");
+                  clearInterval(checkInterval);
+                  
+                  // Redirect based on role
+                  setTimeout(() => {
+                    if (userData.role === "client") {
+                      setLocation("/client-dashboard");
+                    } else if (userData.role === "freelancer") {
+                      setLocation("/freelancer-dashboard");
+                    } else {
+                      setLocation("/dashboard");
+                    }
+                  }, 1500);
+                } else {
+                  console.error('Backend verification failed:', verifyResponse.data.message);
+                }
+              } catch (backendError) {
+                console.error('Backend verification error:', backendError);
+              }
+            }
+          }
+        } else {
+          console.log('No current Firebase user found');
+        }
+      } catch (error) {
+        console.error('Verification check error:', error);
+      }
+    }, 3000); // Check every 3 seconds
+
+    // Stop checking after 10 minutes
+    setTimeout(() => {
+      clearInterval(checkInterval);
+    }, 600000);
+  };
+
+  const resendVerificationEmail = async () => {
+    try {
+      const firebaseUser = firebaseAuthService.getCurrentUser();
+      if (firebaseUser) {
+        const result = await firebaseAuthService.sendEmailVerification(firebaseUser);
+        if (result.success) {
+          setErrorMessage("Verification email resent successfully!");
+          setTimeout(() => setErrorMessage(""), 3000);
+        } else {
+          throw new Error(result.error || 'Failed to resend email');
+        }
+      }
+    } catch (error: any) {
+      setErrorMessage(error.message || 'Failed to resend email');
+      setTimeout(() => setErrorMessage(""), 3000);
+    }
   };
 
   const handleTabChange = (newTab: string) => {
@@ -257,9 +392,10 @@ export default function Signup() {
               </motion.div>
             )}
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsList className="grid w-full grid-cols-3 mb-4">
                 <TabsTrigger value="role" data-testid="tab-role" className="text-sm">Choose Role</TabsTrigger>
                 <TabsTrigger value="details" data-testid="tab-details" className="text-sm">Account Details</TabsTrigger>
+                <TabsTrigger value="verification" data-testid="tab-verification" className="text-sm" disabled={!emailVerificationSent}>Verify Email</TabsTrigger>
               </TabsList>
               
               <TabsContent value="role" className="space-y-3">
@@ -494,6 +630,57 @@ export default function Signup() {
                     </Link>
                   </p>
                 </motion.div>
+              </TabsContent>
+
+              <TabsContent value="verification" className="space-y-4">
+                <div className="text-center space-y-4">
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center"
+                  >
+                    <Mail className="w-8 h-8 text-primary" />
+                  </motion.div>
+                  
+                  <div>
+                    <h3 className="text-lg font-semibold">Check Your Email</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      We've sent a verification email to <strong>{formData.email}</strong>
+                    </p>
+                  </div>
+
+                  {verificationStatus === "verified" ? (
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="bg-green-50 border border-green-200 rounded-lg p-4"
+                    >
+                      <p className="text-green-800 font-medium">✓ Email verified successfully!</p>
+                      <p className="text-green-600 text-sm mt-1">Redirecting to your dashboard...</p>
+                    </motion.div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <p className="text-blue-800 text-sm">
+                          Please check your email and click the verification link to complete your registration.
+                        </p>
+                      </div>
+                      
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={resendVerificationEmail}
+                        className="w-full"
+                      >
+                        Resend Verification Email
+                      </Button>
+                      
+                      <p className="text-xs text-muted-foreground">
+                        Didn't receive the email? Check your spam folder or try resending.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </TabsContent>
             </Tabs>
           </CardContent>

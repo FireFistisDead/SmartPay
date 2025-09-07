@@ -1,5 +1,5 @@
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { useState } from "react";
 import { useLocation } from "wouter";
 import { useDashboardNavigation } from "@/hooks/use-dashboard-navigation";
 import { 
@@ -43,6 +43,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import ParticleBackground from "@/components/particle-background";
 import { useSmartAnimations } from "@/hooks/use-smart-animations";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProfileSettings() {
   const [, setLocation] = useLocation();
@@ -62,23 +63,67 @@ export default function ProfileSettings() {
   const { scrollMetrics, isSlowScrolling } = useSmartAnimations();
   const shouldAnimate = !scrollMetrics.isScrolling || isSlowScrolling;
 
-  const [profileData, setProfileData] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567",
-    location: "San Francisco, CA",
-    company: "Tech Innovations Inc.",
-    bio: "Experienced client looking for top-tier development talent for blockchain and web3 projects.",
-    website: "https://techinnovations.com",
-    linkedin: "https://linkedin.com/in/johndoe",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=john"
-  });
+  const { userProfile, refreshProfile } = useAuth();
+
+  // Initialize profile data from backend userProfile when available
+  const [profileData, setProfileData] = useState(() => ({
+    firstName: (userProfile as any)?.profile?.firstName || (userProfile as any)?.firstName || "",
+    lastName: (userProfile as any)?.profile?.lastName || (userProfile as any)?.lastName || "",
+    email: userProfile?.email || "",
+    phone: (userProfile as any)?.profile?.phone || "",
+    location: (userProfile as any)?.profile?.location || "",
+    company: (userProfile as any)?.profile?.company || "",
+    bio: (userProfile as any)?.profile?.bio || "",
+    website: (userProfile as any)?.profile?.website || "",
+    linkedin: (userProfile as any)?.profile?.linkedin || "",
+    avatar: (userProfile as any)?.profile?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${(userProfile as any)?.username || 'user'}`
+  }));
+
+  // Sync local state when auth context profile updates
+  React.useEffect(() => {
+    if (userProfile) {
+      setProfileData({
+        firstName: (userProfile as any)?.profile?.firstName || (userProfile as any)?.firstName || "",
+        lastName: (userProfile as any)?.profile?.lastName || (userProfile as any)?.lastName || "",
+        email: userProfile?.email || "",
+        phone: (userProfile as any)?.profile?.phone || "",
+        location: (userProfile as any)?.profile?.location || "",
+        company: (userProfile as any)?.profile?.company || "",
+        bio: (userProfile as any)?.profile?.bio || "",
+        website: (userProfile as any)?.profile?.website || "",
+        linkedin: (userProfile as any)?.profile?.linkedin || "",
+        avatar: (userProfile as any)?.profile?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${(userProfile as any)?.username || 'user'}`
+      });
+    }
+  }, [userProfile]);
 
   const handleProfileUpdate = () => {
-    // Save profile data
-    console.log("Saving profile:", profileData);
-    alert("Profile updated successfully!");
+    // Save profile data to backend
+    (async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        const res = await fetch(`${(import.meta as any).env.VITE_API_URL || 'http://localhost:3001'}/api/users/me`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({ profile: profileData })
+        });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to update profile');
+
+  // Update local storage fallback and notify user
+  localStorage.setItem('userProfile', JSON.stringify(data.data.user));
+  // Ask auth context to refresh its profile so whole app stays in sync
+  try { await refreshProfile(); } catch (e) { /* ignore */ }
+  alert('Profile updated successfully!');
+      } catch (err: any) {
+        console.error('Profile update failed', err);
+        alert(err.message || 'Profile update failed');
+      }
+    })();
   };
 
   const handlePasswordChange = () => {
@@ -106,6 +151,28 @@ export default function ProfileSettings() {
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
+  };
+
+  const handleSaveSettings = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await fetch(`${(import.meta as any).env.VITE_API_URL || 'http://localhost:3001'}/api/users/me/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ preferences: { theme }, emailNotifications: notifications })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to update settings');
+      // Optionally update local storage or context
+      localStorage.setItem('userSettings', JSON.stringify(data.data.settings || {}));
+      alert('Settings updated successfully');
+    } catch (err: any) {
+      console.error('Settings update failed', err);
+      alert(err.message || 'Settings update failed');
+    }
   };
 
   return (
