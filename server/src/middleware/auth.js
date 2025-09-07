@@ -23,22 +23,49 @@ const authenticate = async (req, res, next) => {
     }
 
     // Verify token
-    const decoded = JWTUtils.verifyToken(token);
+    let decoded;
+    try {
+      // First try with the JWTUtils (for blockchain tokens with issuer/audience)
+      decoded = JWTUtils.verifyToken(token);
+    } catch (error) {
+      // If that fails, try simple JWT verification (for traditional login tokens)
+      try {
+        const jwt = require('jsonwebtoken');
+        decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret');
+      } catch (simpleError) {
+        logger.error('Token verification failed:', simpleError);
+        return next(new AppError('Invalid authentication token', 401, 'INVALID_TOKEN'));
+      }
+    }
     
-    // Check if user exists
-    const user = await User.findByAddress(decoded.address);
-    if (!user) {
-      return next(new AppError('User no longer exists', 401, 'USER_NOT_FOUND'));
+    let user;
+    
+    // Check if token contains userId (traditional login) or address (blockchain login)
+    if (decoded.userId) {
+      // Traditional login with userId
+      user = await User.findById(decoded.userId);
+      if (!user) {
+        return next(new AppError('User no longer exists', 401, 'USER_NOT_FOUND'));
+      }
+      // Attach user to request with userId property for traditional login
+      req.user = { ...user.toObject(), userId: user._id };
+    } else if (decoded.address) {
+      // Blockchain login with address
+      user = await User.findByAddress(decoded.address);
+      if (!user) {
+        return next(new AppError('User no longer exists', 401, 'USER_NOT_FOUND'));
+      }
+      // Attach user to request
+      req.user = user;
+      req.userAddress = decoded.address;
+    } else {
+      return next(new AppError('Invalid token format', 401, 'INVALID_TOKEN'));
     }
 
     // Check if user is active
     if (user.status !== 'active') {
       return next(new AppError('User account is not active', 401, 'ACCOUNT_INACTIVE'));
     }
-
-    // Attach user to request
-    req.user = user;
-    req.userAddress = decoded.address;
     
     next();
   } catch (error) {

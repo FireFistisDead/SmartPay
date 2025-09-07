@@ -42,8 +42,9 @@ class Server {
     this.server = http.createServer(this.app);
     this.io = new SocketServer(this.server, {
       cors: {
-        origin: process.env.FRONTEND_URL || "http://localhost:3000",
-        methods: ["GET", "POST"]
+        origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:5000"],
+        methods: ["GET", "POST"],
+        credentials: true
       }
     });
     this.port = config.port;
@@ -71,8 +72,10 @@ class Server {
     
     // CORS
     this.app.use(cors({
-      origin: process.env.FRONTEND_URL || "http://localhost:3000",
-      credentials: true
+      origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:5000"],
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"]
     }));
 
     // Enhanced rate limiting with security service
