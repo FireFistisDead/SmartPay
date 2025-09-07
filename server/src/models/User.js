@@ -4,13 +4,20 @@ const userSchema = new mongoose.Schema({
   // Blockchain Identity
   address: {
     type: String,
-    required: false, // Make optional for traditional signup
+
+    // Make blockchain address optional for email/password users. When present, validate format.
+    required: false,
+
     unique: true,
+    sparse: true,
     lowercase: true,
     sparse: true, // Allow null but unique if present - this should handle multiple nulls
     validate: {
       validator: function(v) {
-        return !v || /^0x[a-fA-F0-9]{40}$/.test(v);
+
+        if (!v) return true;
+        return /^0x[a-fA-F0-9]{40}$/.test(v);
+
       },
       message: 'Invalid Ethereum address'
     }
@@ -36,6 +43,13 @@ const userSchema = new mongoose.Schema({
       },
       message: 'Invalid email format'
     }
+  },
+
+  // Google Authentication
+  googleId: {
+    type: String,
+    sparse: true,
+    unique: true
   },
 
   // Email verification
@@ -64,6 +78,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true,
     sparse: true // Allow null but unique if present
+  },
+  
+  // Local auth password (bcrypt hash)
+  password: {
+    type: String,
+    select: false,
   },
   
   // Profile Details
@@ -181,8 +201,10 @@ const userSchema = new mongoose.Schema({
     },
     availability: {
       type: String,
-      enum: ['full-time', 'part-time', 'contract', 'not-available'],
-      default: 'not-available'
+
+      enum: ['available', 'full-time', 'part-time', 'contract', 'not-available'],
+      default: 'available'
+
     },
     portfolio: [{
       title: String,

@@ -400,8 +400,56 @@ const optionalAuth = async (req, res, next) => {
   }
 };
 
+/**
+ * Authenticate user via JWT token (email/password authentication)
+ */
+const authenticateJWT = async (req, res, next) => {
+  try {
+    let token;
+    
+    // Get token from header
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    } else if (req.headers['x-auth-token']) {
+      token = req.headers['x-auth-token'];
+    }
+
+    if (!token) {
+      return next(new AppError('Access token is required', 401, 'NO_TOKEN'));
+    }
+
+    // Verify token
+    const decoded = JWTUtils.verifyToken(token);
+    
+    // Check if user exists
+    const mongoose = require('mongoose');
+    const userId = mongoose.Types.ObjectId.isValid(decoded.userId) 
+      ? mongoose.Types.ObjectId(decoded.userId) 
+      : decoded.userId;
+    const user = await User.findById(userId);
+    if (!user) {
+      return next(new AppError('User no longer exists', 401, 'USER_NOT_FOUND'));
+    }
+
+    // Check if user is active
+    if (user.status !== 'active') {
+      return next(new AppError('User account is not active', 401, 'ACCOUNT_INACTIVE'));
+    }
+
+    // Attach user to request
+    req.user = user;
+    req.userId = decoded.userId;
+    
+    next();
+  } catch (error) {
+    logger.error('JWT authentication error:', error);
+    return next(new AppError('Invalid authentication token', 401, 'INVALID_TOKEN'));
+  }
+};
+
 module.exports = {
   authenticate,
+  authenticateJWT,
   verifySignature,
   requireRole,
   requireFreelancer,

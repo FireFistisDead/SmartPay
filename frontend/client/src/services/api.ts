@@ -43,6 +43,7 @@ apiClient.interceptors.response.use(
 export const apiService = {
   // Authentication endpoints
   auth: {
+
     // Traditional email/password authentication
     signup: (userData: { fullName: string; email: string; password: string; role?: 'client' | 'freelancer' }) =>
       apiClient.post('/users/signup', userData),
