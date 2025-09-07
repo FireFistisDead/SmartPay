@@ -122,6 +122,17 @@ async function main() {
     deploymentAddresses.contractRegistry = await contractRegistry.getAddress();
     console.log(`✅ ContractRegistry deployed to: ${deploymentAddresses.contractRegistry}`);
 
+    // Register all contracts in the registry
+    console.log("📝 Registering contracts in ContractRegistry...");
+    await contractRegistry.registerAllContracts(
+      deploymentAddresses.myToken,
+      deploymentAddresses.mockV3Aggregator ?? ethers.ZeroAddress,
+      deploymentAddresses.milestoneEscrow,
+      deploymentAddresses.smartPay,
+      deploymentAddresses.automatedMilestoneEscrow
+    );
+    console.log("✅ All contracts registered in ContractRegistry");
+
     console.log("");
     console.log("🎉 All contracts deployed successfully!");
     console.log("=====================================");
