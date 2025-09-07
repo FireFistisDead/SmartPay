@@ -11,8 +11,9 @@ interface AuthContextType {
   signup: (email: string, password: string, username: string, role: 'client' | 'freelancer') => Promise<void>;
   logout: () => Promise<void>;
   loginWithGoogle: (role: 'client' | 'freelancer') => Promise<void>;
-
   updateProfile: (profileData: any) => Promise<void>;
+  refreshProfile: () => Promise<void>;
+}
 
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -44,7 +45,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string, role: 'client' | 'freelancer') => {
     try {
-      const response = await fetch(`${API_BASE}/api/users/login`, {
+      const response = await fetch(`${API_BASE}/users/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,12 +81,12 @@ setProfileLoading(false);
 
   const signup = async (email: string, password: string, username: string, role: 'client' | 'freelancer') => {
     try {
-      const response = await fetch(`${API_BASE}/api/users/signup`, {
+      const response = await fetch(`${API_BASE}/users/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, username, role }),
+        body: JSON.stringify({ email, password, fullName: username, role }),
       });
 
       const data = await response.json();
@@ -113,7 +114,7 @@ setProfileLoading(false);
       
       if (result.user) {
         // Send Google user data to backend
-        const response = await fetch(`${API_BASE}/api/users/google`, {
+        const response = await fetch(`${API_BASE}/users/google`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

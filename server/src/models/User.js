@@ -45,6 +45,13 @@ const userSchema = new mongoose.Schema({
     }
   },
 
+  // Google Authentication
+  googleId: {
+    type: String,
+    sparse: true,
+    unique: true
+  },
+
   // Email verification
   isEmailVerified: {
     type: Boolean,

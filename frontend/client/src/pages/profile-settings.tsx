@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+// import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useDashboardNavigation } from "@/hooks/use-dashboard-navigation";
-import { useAuth } from "@/contexts/AuthContext";
+// import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 // Extended user profile type to match backend structure
@@ -76,7 +76,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function ProfileSettings() {
   const [, setLocation] = useLocation();
   const { goToDashboard } = useDashboardNavigation();
-  const { userProfile, updateProfile, refreshProfile } = useAuth();
+  const { userProfile, updateProfile } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("profile");
   const [showPassword, setShowPassword] = useState(false);

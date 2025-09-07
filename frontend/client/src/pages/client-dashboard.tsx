@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLocation } from "wouter";
 import ParticleBackground from "@/components/particle-background";
 import { useSmartAnimations } from "@/hooks/use-smart-animations";
-import { useAuth } from "@/contexts/AuthContext";
+// import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -231,7 +231,7 @@ const ProjectCard = ({
 export default function ClientDashboard() {
   const [, setLocation] = useLocation();
   const { calculateAnimationConfig, getViewportConfig } = useSmartAnimations();
-  const { userProfile } = useAuth();
+  // const { userProfile } = useAuth();
   const [activeTab, setActiveTab] = useState("projects");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -249,6 +249,36 @@ export default function ClientDashboard() {
     if (!fullName) return 'User';
     const spaceIndex = fullName.indexOf(' ');
     return spaceIndex === -1 ? fullName : fullName.substring(0, spaceIndex);
+  };
+
+  // Get user display name
+  const getUserDisplayName = () => {
+    if (!userProfile) {
+      return "User";
+    }
+    
+    const extendedProfile = userProfile as any;
+    
+    // Backend returns firstName and lastName directly, not nested under profile
+    const firstName = extendedProfile.firstName || extendedProfile.profile?.firstName;
+    const lastName = extendedProfile.lastName || extendedProfile.profile?.lastName;
+    const fullName = extendedProfile.fullName;
+    const username = extendedProfile.username;
+    const email = extendedProfile.email;
+    
+    if (fullName) {
+      return fullName;
+    } else if (firstName && lastName) {
+      return `${firstName} ${lastName}`;
+    } else if (firstName) {
+      return firstName;
+    } else if (username) {
+      return username;
+    } else if (email) {
+      return email.split('@')[0];
+    } else {
+      return "User";
+    }
   };
 
   // Get the user's first name (prefer profile.firstName)
@@ -499,23 +529,21 @@ export default function ClientDashboard() {
               
               <div className="flex items-center space-x-3 px-3 py-2 glass-morphism rounded-xl border border-border/50">
                 <Avatar className="w-8 h-8">
-          <AvatarImage src={(userProfile as any)?.profile?.avatar || ""} />
-          <AvatarFallback className="bg-gradient-to-r from-primary/20 to-secondary/20">
-            {(() => {
-              const displayName = getUserDisplayName();
-              return displayName.substring(0, 2).toUpperCase();
-            })()}
-          </AvatarFallback>
-          </Avatar>
-          <div className="text-sm">
-            <p className="font-medium">{getUserDisplayName()}</p>
-            <p className="text-muted-foreground text-xs">
-              {userProfile?.email ? userProfile.email.substring(0, 10) + "..." : "Client"}
-            </p>
+                  <AvatarImage src={(userProfile as any)?.avatar || (userProfile as any)?.profile?.avatar || ""} />
+                  <AvatarFallback className="bg-gradient-to-r from-primary/20 to-secondary/20">
+                    {(() => {
+                      const displayName = getUserDisplayName();
+                      return displayName.substring(0, 2).toUpperCase();
+                    })()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-sm">
+                  <p className="font-medium">{getUserDisplayName()}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {userProfile?.email ? userProfile.email.substring(0, 10) + "..." : "Client"}
+                  </p>
                 </div>
-              </div>
-              
-              <Button variant="ghost" size="sm" onClick={() => setLocation("/")} className="text-muted-foreground hover:text-foreground">
+              </div>              <Button variant="ghost" size="sm" onClick={() => setLocation("/")} className="text-muted-foreground hover:text-foreground">
                 <LogOut className="h-5 w-5" />
               </Button>
             </div>

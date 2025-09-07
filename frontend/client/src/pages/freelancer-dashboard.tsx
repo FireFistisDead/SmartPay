@@ -327,15 +327,47 @@ export default function FreelancerDashboard() {
     return spaceIndex === -1 ? fullName : fullName.substring(0, spaceIndex);
   };
 
-  // Get the user's first name
-    // Safely access profile.firstName using any cast in case TS types don't include profile yet
-    const firstName = userProfile
-      ? (
-          ((userProfile as any)?.profile?.firstName)
-            ? getFirstName((userProfile as any).profile.firstName)
-            : (getFirstName(userProfile.username || '') || getFirstName(userProfile.email?.split('@')[0] || ''))
-        )
-      : 'User';
+  // Get user display name
+  const getUserDisplayName = () => {
+    if (!userProfile) {
+      return "User";
+    }
+    
+    const extendedProfile = userProfile as any;
+    
+    // Backend returns firstName and lastName directly, not nested under profile
+    const firstName = extendedProfile.firstName || extendedProfile.profile?.firstName;
+    const lastName = extendedProfile.lastName || extendedProfile.profile?.lastName;
+    const fullName = extendedProfile.fullName;
+    const username = extendedProfile.username;
+    const email = extendedProfile.email;
+    
+    if (fullName) {
+      return fullName;
+    } else if (firstName && lastName) {
+      return `${firstName} ${lastName}`;
+    } else if (firstName) {
+      return firstName;
+    } else if (username) {
+      return username;
+    } else if (email) {
+      return email.split('@')[0];
+    } else {
+      return "User";
+    }
+  };
+
+  // Get the user's first name - updated to match backend response structure
+  const firstName = userProfile
+    ? (
+        // Backend returns firstName directly, not nested under profile
+        (userProfile as any)?.firstName || 
+        (userProfile as any)?.profile?.firstName ||
+        getFirstName((userProfile as any)?.fullName || '') ||
+        getFirstName(userProfile.username || '') || 
+        getFirstName(userProfile.email?.split('@')[0] || '')
+      )
+    : 'User';
 
   // Show loading spinner while authenticating
   if (authLoading) {
@@ -574,26 +606,19 @@ export default function FreelancerDashboard() {
               
               <div className="flex items-center space-x-3 px-3 py-2 glass-morphism rounded-xl border border-border/50">
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src={(userProfile as any)?.profile?.avatar || ''} />
+                  <AvatarImage src={(userProfile as any)?.avatar || (userProfile as any)?.profile?.avatar || ''} />
                   <AvatarFallback className="bg-gradient-to-r from-primary/20 to-secondary/20">
                     {(() => {
-                      const p = (userProfile as any)?.profile;
-                      const first = p?.firstName || userProfile?.username || userProfile?.email?.split('@')[0] || 'U';
-                      const last = p?.lastName || '';
-                      if (last) return `${first[0]?.toUpperCase() || ''}${last[0]?.toUpperCase() || ''}`;
-                      const parts = first.split(' ');
-                      if (parts.length > 1) return `${parts[0][0]?.toUpperCase() || ''}${parts[1][0]?.toUpperCase() || ''}`;
-                      return (first[0] || 'U').toUpperCase();
+                      const displayName = getUserDisplayName();
+                      return displayName.substring(0, 2).toUpperCase();
                     })()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-sm">
-                  <p className="font-medium">{(userProfile as any)?.profile?.firstName || userProfile?.username || userProfile?.email?.split('@')[0] || 'User'}</p>
-                  <p className="text-muted-foreground text-xs">{(() => {
-                    const addr = (userProfile as any)?.address || userProfile?.id || '';
-                    if (!addr) return '';
-                    return `${addr.slice(0,6)}...${addr.slice(-4)}`;
-                  })()}</p>
+                  <p className="font-medium">{getUserDisplayName()}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {userProfile?.email ? userProfile.email.substring(0, 10) + "..." : "Freelancer"}
+                  </p>
                 </div>
               </div>
               

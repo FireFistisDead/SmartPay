@@ -192,6 +192,31 @@ router.post('/login',
 );
 
 /**
+ * @route   POST /api/users/google
+ * @desc    Google authentication (login/signup)
+ * @access  Public
+ */
+router.post('/google',
+  body('googleId')
+    .notEmpty()
+    .withMessage('Google ID is required'),
+  body('email')
+    .isEmail()
+    .withMessage('Invalid email format'),
+  body('username')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Username must be between 2 and 50 characters'),
+  body('role')
+    .optional()
+    .isIn(['client', 'freelancer'])
+    .withMessage('Role must be either client or freelancer'),
+  validate,
+  catchAsync(userController.googleAuth)
+);
+
+/**
  * @route   POST /api/users/forgot-password
  * @desc    Initiate password reset process
  * @access  Public
