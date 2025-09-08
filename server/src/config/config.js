@@ -52,10 +52,54 @@ const config = {
 
   // CORS Configuration
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: function(origin, callback) {
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'http://localhost:5000',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:5000',
+        'https://smartpay-2qq5.onrender.com',
+        'https://smartpay-v1-0.onrender.com'
+      ];
+
+      const allowedPatterns = [
+        /^https:\/\/.*\.vercel\.app$/,
+        /^https:\/\/.*\.netlify\.app$/,
+        /^https:\/\/.*\.render\.com$/,
+        /^https:\/\/.*\.github\.io$/
+      ];
+
+      // Add production origins from environment variable
+      if (process.env.ALLOWED_ORIGINS) {
+        const prodOrigins = process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim());
+        allowedOrigins.push(...prodOrigins);
+      }
+
+      // Allow requests with no origin (mobile apps, etc.)
+      if (!origin) return callback(null, true);
+
+      // Check exact matches
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        return callback(null, true);
+      }
+
+      // Check pattern matches
+      for (const pattern of allowedPatterns) {
+        if (pattern.test(origin)) {
+          return callback(null, true);
+        }
+      }
+
+      callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'X-Requested-With'],
+    exposedHeaders: ['X-Total-Count'],
+    preflightContinue: false,
+    optionsSuccessStatus: 200
   },
 
   // Advanced Analytics Configuration

@@ -42,7 +42,7 @@ class Server {
     this.server = http.createServer(this.app);
     this.io = new SocketServer(this.server, {
       cors: {
-        origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:5000"],
+        origin: this.getAllowedOrigins(),
         methods: ["GET", "POST"],
         credentials: true
       }
@@ -66,17 +66,44 @@ class Server {
     this.setupSocketIO();
   }
 
+  getAllowedOrigins() {
+    const developmentOrigins = [
+      "http://localhost:3000",
+      "http://localhost:5173", 
+      "http://localhost:5000",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:5000"
+    ];
+
+    const productionOrigins = process.env.ALLOWED_ORIGINS 
+      ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+      : [];
+
+    // In development, allow all origins for easier testing
+    if (process.env.NODE_ENV === 'development') {
+      return [...developmentOrigins, ...productionOrigins];
+    }
+
+    // In production, be more restrictive
+    return productionOrigins.length > 0 ? productionOrigins : developmentOrigins;
+  }
+
   setupMiddleware() {
     // Apply advanced security middleware
     this.app.use(...this.securityService.getSecurityMiddleware());
     
     // CORS
-    this.app.use(cors({
-      origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:5000"],
-      credentials: true,
-      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization"]
-    }));
+    this.app.use(cors(config.cors));
+
+    // Handle preflight requests explicitly
+    this.app.options('*', (req, res) => {
+      res.header('Access-Control-Allow-Origin', req.headers.origin);
+      res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, x-api-key');
+      res.header('Access-Control-Allow-Credentials', 'true');
+      res.sendStatus(200);
+    });
 
     // Enhanced rate limiting with security service
     const advancedLimiter = this.securityService.createRateLimit({
