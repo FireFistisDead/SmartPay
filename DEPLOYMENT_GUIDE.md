@@ -3,6 +3,9 @@
 ## Backend Deployment (Render) ✅ COMPLETED
 Your backend is already deployed at: **https://smartpay-2qq5.onrender.com**
 
+## Frontend Deployment (Render) ✅ COMPLETED  
+Your frontend is deployed at: **https://smartpay-v1-0.onrender.com**
+
 ### CORS Configuration Updated:
 - ✅ Added your Render backend URL to allowed origins
 - ✅ Added pattern matching for common hosting platforms (Vercel, Netlify, etc.)
