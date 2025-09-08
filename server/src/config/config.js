@@ -224,7 +224,7 @@ const config = {
 
   // JWT Configuration
   jwt: {
-    secret: process.env.JWT_SECRET || 'your-secret-key',
+    secret: process.env.JWT_SECRET || 'your-super-secret-jwt-key-here',
     expiresIn: '7d',
     issuer: 'freelance-escrow',
     audience: 'freelance-escrow-users',

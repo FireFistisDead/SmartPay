@@ -11,8 +11,10 @@ interface AuthContextType {
   signup: (email: string, password: string, username: string, role: 'client' | 'freelancer') => Promise<void>;
   logout: () => Promise<void>;
   loginWithGoogle: (role: 'client' | 'freelancer') => Promise<void>;
+  updateProfile: (profileData: any) => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -37,12 +39,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [profileLoading, setProfileLoading] = useState(true);
   const loading = firebaseLoading || profileLoading;
 
-  // API base URL - using environment variable or default to localhost:3001
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  // API base URL - backend is running on port 3001
+  const API_BASE = 'http://localhost:3001/api';
+
 
   const login = async (email: string, password: string, role: 'client' | 'freelancer') => {
     try {
-      const response = await fetch(`${API_BASE}/api/users/login`, {
+      const response = await fetch(`${API_BASE}/users/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -56,17 +59,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error(data.message || 'Login failed');
       }
 
-      // Response shape may be { success, data: { token, user } } or { success, token, user }
+      // Store token in localStorage
       const payload = data.data || data;
 
-      // Store token and profile in localStorage
-      if (payload.token) localStorage.setItem('authToken', payload.token);
-      localStorage.setItem('userRole', role);
-      if (payload.user) {
-        localStorage.setItem('userProfile', JSON.stringify(payload.user));
-        setUserProfile(payload.user);
-      }
-      setProfileLoading(false);
+// Store token in localStorage (from your version)
+localStorage.setItem('authToken', payload.token || data.data.token);
+localStorage.setItem('userRole', role);
+
+// Store user profile (from main version + your approach)
+const user = payload.user || data.data.user;
+if (user) {
+  localStorage.setItem('userProfile', JSON.stringify(user));
+  setUserProfile(user);
+}
+setProfileLoading(false);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -75,12 +81,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signup = async (email: string, password: string, username: string, role: 'client' | 'freelancer') => {
     try {
-      const response = await fetch(`${API_BASE}/api/users/signup`, {
+      const response = await fetch(`${API_BASE}/users/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, username, role }),
+        body: JSON.stringify({ email, password, fullName: username, role }),
       });
 
       const data = await response.json();
@@ -88,6 +94,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (!data.success) {
         throw new Error(data.message);
       }
+
+      // Store token and user data after signup
+      localStorage.setItem('authToken', data.data.token);
+      localStorage.setItem('userRole', role);
+      setUserProfile(data.data.user);
 
       return data;
     } catch (error) {
@@ -103,7 +114,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (result.user) {
         // Send Google user data to backend
-        const response = await fetch(`${API_BASE}/api/users/google`, {
+        const response = await fetch(`${API_BASE}/users/google`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -164,7 +175,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     setProfileLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/api/users/me`, {
+
+      const response = await fetch(`${API_BASE}/users/me`, {
+
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -173,6 +186,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = await response.json();
       console.log('getCurrentUser response:', data);
       
+
       if (data && data.success && data.data && data.data.user) {
         console.log('User data received:', data.data.user);
         setUserProfile(data.data.user);
@@ -202,7 +216,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Expose a named refresh function so pages can request a fresh profile from the backend
+  const updateProfile = async (profileData: any) => {
+    const token = localStorage.getItem('authToken');
+    if (!token) throw new Error('No authentication token');
+
+    try {
+      const response = await fetch(`${API_BASE}/users/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(profileData),
+      });
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.message);
+      }
+
+      // Update the local user profile
+      setUserProfile(data.data.user);
+      return data;
+    } catch (error) {
+      console.error('Update profile error:', error);
+      throw error;
+    }
+  };
+
+
   const refreshProfile = async () => {
     await getCurrentUser();
   };
@@ -229,7 +272,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signup,
     logout,
     loginWithGoogle,
-  refreshProfile
+
+    updateProfile,
+    refreshProfile,
+
   };
 
   return (

@@ -430,6 +430,126 @@ class UserController {
   }
 
   /**
+   * Google authentication (login or signup)
+   */
+  async googleAuth(req, res) {
+    const { googleId, email, username, role } = req.body;
+
+    try {
+      // Check if user already exists with this email or Google ID
+      let user = await User.findOne({
+        $or: [
+          { email: email.toLowerCase() },
+          { googleId: googleId }
+        ]
+      });
+
+      if (user) {
+        // User exists, update Google ID if not set and log them in
+        if (!user.googleId) {
+          user.googleId = googleId;
+          await user.save();
+        }
+
+        // Update last login
+        user.lastLoginAt = new Date();
+        await user.save();
+
+        // Generate JWT token
+        const token = jwt.sign(
+          { 
+            userId: user._id, 
+            email: user.email,
+            roles: user.roles,
+            emailVerified: true // Google emails are pre-verified
+          },
+          process.env.JWT_SECRET || 'default-secret',
+          { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        );
+
+        logger.info(`User logged in via Google: ${user.email}`);
+
+        return res.json({
+          success: true,
+          data: {
+            token,
+            user: {
+              id: user._id,
+              email: user.email,
+              fullName: `${user.profile.firstName} ${user.profile.lastName}`.trim() || username,
+              firstName: user.profile.firstName,
+              lastName: user.profile.lastName,
+              roles: user.roles,
+              isEmailVerified: true,
+              createdAt: user.createdAt
+            }
+          }
+        });
+      } else {
+        // New user, create account
+        const nameParts = (username || '').trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+
+        const userRole = role && ['client', 'freelancer'].includes(role) ? role : 'client';
+
+        const newUser = new User({
+          email: email.toLowerCase(),
+          googleId: googleId,
+          profile: {
+            firstName,
+            lastName
+          },
+          roles: [userRole],
+          isEmailVerified: true, // Google emails are pre-verified
+          registeredAt: new Date(),
+          lastLoginAt: new Date()
+        });
+
+        await newUser.save();
+
+        // Generate JWT token
+        const token = jwt.sign(
+          { 
+            userId: newUser._id, 
+            email: newUser.email,
+            roles: newUser.roles,
+            emailVerified: true
+          },
+          process.env.JWT_SECRET || 'default-secret',
+          { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        );
+
+        logger.info(`New user created via Google: ${newUser.email}`);
+
+        return res.status(201).json({
+          success: true,
+          data: {
+            token,
+            user: {
+              id: newUser._id,
+              email: newUser.email,
+              fullName: username || `${firstName} ${lastName}`.trim(),
+              firstName: newUser.profile.firstName,
+              lastName: newUser.profile.lastName,
+              roles: newUser.roles,
+              isEmailVerified: true,
+              createdAt: newUser.createdAt
+            }
+          }
+        });
+      }
+    } catch (error) {
+      logger.error('Google authentication error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Google authentication failed',
+        error: error.message
+      });
+    }
+  }
+
+  /**
    * Verify email status from Firebase (called from frontend after Firebase verification)
    */
   async verifyEmail(req, res) {
