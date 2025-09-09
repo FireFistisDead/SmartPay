@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiService } from '../services/api';
-
+// import { VITE_API_URL } from '@/config';
 interface ServerStatus {
   status: string;
   timestamp: string;
@@ -18,6 +18,8 @@ const ApiTest: React.FC = () => {
     
     try {
       // Test health endpoint
+      
+      // const response = await fetch(VITE_API_URL + '/health');
       const response = await fetch('http://localhost:3001/health');
       const data = await response.json();
       setServerStatus(data);

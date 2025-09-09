@@ -39,13 +39,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [profileLoading, setProfileLoading] = useState(true);
   const loading = firebaseLoading || profileLoading;
 
-  // API base URL - backend is running on port 3001
-  const API_BASE = 'http://localhost:3001/api';
+  // API base URL - use environment variable if available, otherwise fallback to localhost
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const API_ENDPOINT = `${API_BASE}/api`;
 
 
   const login = async (email: string, password: string, role: 'client' | 'freelancer') => {
     try {
-      const response = await fetch(`${API_BASE}/users/login`, {
+      const response = await fetch(`${API_ENDPOINT}/users/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,7 +82,7 @@ setProfileLoading(false);
 
   const signup = async (email: string, password: string, username: string, role: 'client' | 'freelancer') => {
     try {
-      const response = await fetch(`${API_BASE}/users/signup`, {
+      const response = await fetch(`${API_ENDPOINT}/users/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -114,7 +115,7 @@ setProfileLoading(false);
       
       if (result.user) {
         // Send Google user data to backend
-        const response = await fetch(`${API_BASE}/users/google`, {
+        const response = await fetch(`${API_ENDPOINT}/users/google`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -176,7 +177,7 @@ setProfileLoading(false);
     setProfileLoading(true);
     try {
 
-      const response = await fetch(`${API_BASE}/users/me`, {
+      const response = await fetch(`${API_ENDPOINT}/users/me`, {
 
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -221,7 +222,7 @@ setProfileLoading(false);
     if (!token) throw new Error('No authentication token');
 
     try {
-      const response = await fetch(`${API_BASE}/users/me`, {
+      const response = await fetch(`${API_ENDPOINT}/users/me`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
