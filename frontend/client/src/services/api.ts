@@ -1,7 +1,8 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
 // API Configuration
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001';
+// const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001';
+const API_BASE_URL = "https://smartpay-2qq5.onrender.com"
 console.log(API_BASE_URL);
 if (!API_BASE_URL) {
   console.error("VITE_API_URL is not set. The application will not work correctly.");
