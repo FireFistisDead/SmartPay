@@ -2,7 +2,12 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 
 
 // API Configuration
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001';
-
+console.log(API_BASE_URL);
+if (!API_BASE_URL) {
+  console.error("VITE_API_URL is not set. The application will not work correctly.");
+  // In a real-world scenario, you might want to throw an error to fail the build
+  // throw new Error("VITE_API_URL is not set. Please check your environment variables.");
+}
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
   baseURL: `${API_BASE_URL}/api`,

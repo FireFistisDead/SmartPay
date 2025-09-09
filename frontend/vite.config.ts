@@ -44,6 +44,7 @@
 //     },
 //   },
 // });
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -51,10 +52,6 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 // Use the functional form of defineConfig to get access to the 'mode'
 export default defineConfig(async ({ mode }) => {
-  // --- DEBUG LINE ADDED ---
-  console.log(`[Vite Config] Building in mode: ${mode}`);
-  // ----------------------
-
   const isProduction = mode === 'production';
 
   return {
@@ -103,4 +100,3 @@ export default defineConfig(async ({ mode }) => {
     },
   };
 });
-
