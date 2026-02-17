@@ -1,0 +1,50 @@
+.page {
+  color: var(--white-color);
+}
+.bg-container {
+  height: 400px;
+  background: url("/profile-background-image.jpg") no-repeat top center/cover;
+  z-index: -1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
+}
+.dark-cover {
+  background: linear-gradient(to bottom, transparent, #0f172a) !important;
+  width: 100%;
+  height: 100%;
+}
+.bg-container h1 {
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  z-index: 100;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--primary-color);
+}
+.main-container {
+  padding: 0 5rem;
+  background-color: var(--light-black-color);
+  padding-bottom: 3rem;
+  padding-top: 2rem;
+  margin-top: 1rem;
+}
+@media (width < 900px) {
+  .navbar {
+    padding: 0 2rem;
+  }
+  .main-container {
+    padding: 0 2rem 3rem 2rem;
+  }
+}
+@media (width < 700px) {
+  .main-container {
+    padding: 0 1rem 3rem 1;
+  }
+}

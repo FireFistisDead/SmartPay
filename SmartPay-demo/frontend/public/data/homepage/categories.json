@@ -1,0 +1,79 @@
+[
+  {
+    "a_tag": "website-making",
+    "heading": "Website Making",
+    "paragraph": "Create a website that suits your needs and captivates your audience",
+    "unique_uuid": "5f3a6b2c-1d9f-4cbf-9d4a-6c7b8a1d9f2c",
+    "image": "website-making.jpg"
+  },
+  {
+    "a_tag": "book-cover-design",
+    "heading": "Book Cover Design",
+    "paragraph": "A stunning cover that provokes reader’s interest",
+    "unique_uuid": "9a3b7cd2-5c88-48ec-af8d-2f141a9f3097",
+    "image": "book-cover-design.webp"
+  },
+  {
+    "a_tag": "letterhead-design",
+    "heading": "Letterhead Design",
+    "paragraph": "A professional letterhead crafted for your business",
+    "unique_uuid": "a5a1b6d8-7b20-4d9b-af2d-cd5a8f3a2c1b",
+    "image": "document-design.webp"
+  },
+  {
+    "a_tag": "logo-business-card",
+    "heading": "Logo & Business Card",
+    "paragraph": "A logo and business card that connect perfectly",
+    "unique_uuid": "1b5d8d6a-2f39-46a5-bfc9-efce0d2c601a",
+    "image": "logo-business-card.webp"
+  },
+  {
+    "a_tag": "logo-design",
+    "heading": "Logo Design",
+    "paragraph": "A memorable logo that signifies your brand",
+    "unique_uuid": "9afff9cbd1fcd59aa5a61dbfc3110b66",
+    "image": "logo-design.webp"
+  },
+  {
+    "a_tag": "mobile-app-design",
+    "heading": "Mobile Apps Design",
+    "paragraph": "Mobile app design that attracts users & gets downloaded on-the-go",
+    "unique_uuid": "ae2d7c81-9024-4aa2-9f6b-0cb1082f7c0d",
+    "image": "mobile-app-design.webp"
+  },
+  {
+    "a_tag": "packaging-design",
+    "heading": "Packaging Design",
+    "paragraph": "Packaging for your brand customers can’t wait to open",
+    "unique_uuid": "b5e4a7fd-2f71-4d82-a320-3bd0a6c8f7c9",
+    "image": "packaging-design.webp"
+  },
+  {
+    "a_tag": "sticker-design",
+    "heading": "Sticker Design",
+    "paragraph": "Stickers, people would love to stick and stock up",
+    "unique_uuid": "7f1da0e9-7b43-4d5a-aeaf-1c21b8d5ef2f",
+    "image": "sticker-design.webp"
+  },
+  {
+    "a_tag": "tshirt-design",
+    "heading": "T-Shirt Design",
+    "paragraph": "Shirts they will love to keep, wear and gift",
+    "unique_uuid": "8d6a1b2c-4f93-4a69-b8c9-7f5e2d31a0fb",
+    "image": "tshirt-design.webp"
+  },
+  {
+    "a_tag": "website-design",
+    "heading": "Website Design",
+    "paragraph": "A website that entices, engages, and retains visitors",
+    "unique_uuid": "3f8e7a2d-591b-4bfc-83d9-ae6c7f1d29c4",
+    "image": "website-design.webp"
+  },
+  {
+    "a_tag": "website-making",
+    "heading": "Website Making",
+    "paragraph": "Create a website that suits your needs and captivates your audience",
+    "unique_uuid": "5f3a6b2c-1d9f-4cbf-9d4a-6c7b8a1d9f2c",
+    "image": "website-making.jpg"
+  }
+]

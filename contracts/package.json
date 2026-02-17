@@ -1,0 +1,19 @@
+{
+  "name": "smartpay-contracts",
+  "version": "1.0.0",
+  "description": "SmartPay smart contracts for blockchain-based payments",
+  "main": "index.js",
+  "scripts": {
+    "compile-export": "node compileAndExport.js"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "hardhat": "^2.18.3"
+  },
+  "keywords": ["smartpay", "solidity", "smart-contracts", "hardhat"],
+  "author": "SmartPay Development Team",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.3.1"
+  }
+}

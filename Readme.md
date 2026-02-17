@@ -1,294 +1,280 @@
-# SmartPay - Decentralized Freelance Work Platform
+# SmartPay - Decentralized Freelance Marketplace 🚀
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green)](https://nodejs.org/)
-[![React](https://img.shields.io/badge/React-18.3.1-blue)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6.3-blue)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+[![Solidity](https://img.shields.io/badge/Solidity-0.8.8-blue)](https://soliditylang.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-6.0-green)](https://www.mongodb.com/)
 
-> **SmartPay** is a revolutionary decentralized freelance platform that automates milestone-based payments using blockchain smart contracts, ensuring trust, transparency, and security for both clients and freelancers.
+SmartPay revolutionizes the freelance marketplace by leveraging blockchain technology for secure, transparent, and decentralized task management and payments.
 
-## 🌟 Features
+## ✨ Features
 
-- **🔗 Blockchain Integration**: Automated payments via smart contracts
-- **💼 Dual Role System**: Separate dashboards for clients and freelancers  
-- **📊 Milestone Management**: Track project progress with escrow protection
-- **🔒 Dispute Resolution**: Oracle-based conflict resolution system
-- **🎨 Modern UI/UX**: Futuristic design with animations and micro-interactions
-- **📱 Responsive Design**: Mobile-first approach with adaptive layouts
-- **🌙 Dark/Light Mode**: Theme switching with smooth transitions
+- 🔐 **Blockchain-Powered**: Ethereum smart contracts ensure secure and transparent transactions
+- 💼 **Task Management**: Create, assign, and complete tasks with automated payment escrow
+- 🎨 **Multiple Categories**: Design (Logo, UI/UX, Web) and Development (Full-stack, Web)
+- ⭐ **Review System**: Rate and review completed work
+- 👤 **User Profiles**: Manage your profile, credits, and task history
+- 📱 **Responsive Design**: Works seamlessly on desktop and mobile
 
-## 🏗️ Architecture
+## 📁 Project Structure
 
 ```
 SmartPay/
-├── client/                 # React frontend application
-│   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── pages/          # Application pages/routes
-│   │   ├── hooks/          # Custom React hooks
-│   │   └── lib/            # Utility functions and configs
-├── server/                 # Express.js backend
-├── shared/                 # Shared schemas and types
-└── docs/                   # Documentation
+├── frontend/          # Next.js 14 application
+├── backend/           # Express.js API with MongoDB
+├── contracts/         # Solidity smart contracts (Hardhat)
+└── SmartPay-demo/    # Demo version (no crypto required!)
 ```
 
-## 🚀 Quick Start
+## 🎯 Two Versions Available
+
+### 1. **Production SmartPay** (This Directory)
+- Full blockchain integration
+- Requires MetaMask wallet
+- Real cryptocurrency transactions (3 ETH per task)
+- Permanent blockchain storage
+
+### 2. **SmartPay-demo** (Demo Directory)
+- **No wallet required!**
+- **No crypto needed!**
+- FREE task creation
+- Perfect for testing and demonstrations
+- [See Demo Documentation](SmartPay-demo/README.md)
+
+## 🚀 Tech Stack
+
+## 🚀 Tech Stack
+
+**Frontend:**
+- Next.js 14 (App Router)
+- React 18
+- ethers.js for blockchain interaction
+- MetaMask integration
+
+**Backend:**
+- Express.js 4
+- MongoDB with Mongoose
+- RESTful API
+- File upload support
+
+**Blockchain:**
+- Solidity 0.8.8
+- Hardhat development environment
+- Ethereum smart contracts
+
+## ⚡ Quick Start
 
 ### Prerequisites
+- Node.js 16+ 
+- MongoDB
+- MetaMask browser extension
 
-Make sure you have the following installed:
-- **Node.js** (v18 or higher) - [Download here](https://nodejs.org/)
-- **npm** or **yarn** package manager
-- **Git** - [Download here](https://git-scm.com/)
-- **MetaMask** or compatible Web3 wallet
+### Installation
 
-### 1. Clone the Repository
-
+1. **Clone the repository**
 ```bash
-# Clone the project
-git clone https://github.com/FireFistisDead/SmartPay.git
-
-# Navigate to project directory
+git clone https://github.com/Path3010/SmartPay.git
 cd SmartPay
-
-# Switch to your development branch (replace 'YourName' with your actual branch)
-git checkout YourName
 ```
 
-### 2. Install Dependencies
+2. **Create environment files**
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.local.example frontend/.env.local
+cp contracts/.env.example contracts/.env
+```
+
+3. **Install dependencies**
+```bash
+# Backend
+cd backend && npm install
+
+# Frontend
+cd ../frontend && npm install
+
+# Contracts
+cd ../contracts && npm install
+```
+
+4. **Start MongoDB** (if not running)
+```bash
+# Using Docker
+docker run -d --name smartpay-mongo -p 27017:27017 mongo:6
+
+# Or use local MongoDB installation
+```
+
+5. **Run the services**
+```bash
+# Terminal 1 - Backend
+cd backend && npm start    # http://localhost:8080
+
+# Terminal 2 - Frontend  
+cd frontend && npm run dev # http://localhost:3000
+```
+
+6. **Open the app**
+- Navigate to http://localhost:3000
+- Connect your MetaMask wallet
+- Start creating tasks!
+
+## 🎭 Try Demo Version (No Crypto Required!)
+
+Want to test without cryptocurrency? Check out the demo version:
 
 ```bash
-# Install all dependencies
-npm install
-
-# Or using yarn
-yarn install
+cd SmartPay-demo
+# See SmartPay-demo/QUICKSTART.md for setup
 ```
 
-### 3. Environment Setup
+**Demo Features:**
+- ✅ FREE task creation
+- ✅ No wallet needed
+- ✅ All UI/UX features
+- ✅ Perfect for presentations
 
-Create a `.env` file in the root directory:
+[📖 Demo Documentation](SmartPay-demo/README.md)
 
+## 🔧 Environment Variables
+
+### Backend (backend/.env)
 ```env
-# Database Configuration
-DATABASE_URL="your_database_connection_string"
-
-# Blockchain Configuration  
-ETHEREUM_RPC_URL="https://sepolia.infura.io/v3/your-api-key"
-PRIVATE_KEY="your_wallet_private_key_for_deployment"
-
-# Session Configuration
-SESSION_SECRET="your_session_secret_key"
-
-# Development
-NODE_ENV="development"
-PORT=3000
+MONGODB_URL=mongodb://127.0.0.1:27017/smartpay
+PORT=8080
+ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+JWT_SECRET=your-secret-key
+NODE_ENV=development
 ```
 
-### 4. Database Setup
+### Frontend (frontend/.env.local)
+```env
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
+```
 
+### Contracts (contracts/.env)
+```env
+PRIVATE_KEY=your-private-key
+INFURA_PROJECT_ID=your-infura-id
+```
+
+## 📖 How It Works
+
+1. **Create Task**: Post a task with reward (costs 3 ETH)
+2. **Browse Tasks**: Freelancers browse available tasks
+3. **Request Task**: Solvers request to work on tasks
+4. **Assign Task**: Creator assigns task to a solver
+5. **Complete Task**: Solver completes and submits work
+6. **Release Payment**: Creator approves and releases payment
+7. **Review**: Both parties can leave reviews
+
+## 🎨 Features in Detail
+
+### Task Management
+- Create tasks with detailed descriptions
+- Set rewards in ETH
+- Specify time to complete
+- Choose from multiple categories
+- Track task status (Created, Assigned, Completed, Accepted)
+
+### Payment System
+- Escrow-based payments
+- Automated fund transfers via smart contracts
+- Secure blockchain transactions
+- Credit system for task creation
+
+### User System
+- Profile management
+- Task history
+- Review and rating system
+- Credit balance tracking
+
+## 🛠️ Development
+
+### Smart Contract Deployment
 ```bash
-# Push database schema (using Drizzle ORM)
-npm run db:push
+cd contracts
+npx hardhat compile
+npx hardhat test
+npx hardhat run scripts/deploy.js --network localhost
 ```
 
-### 5. Start Development Server
-
+### Run Tests
 ```bash
-# Start the development server
-npm run dev
+# Backend tests (if available)
+cd backend && npm test
+
+# Contract tests
+cd contracts && npx hardhat test
 ```
 
-The application will be available at `http://localhost:3000`
+## 📁 Key Directories
 
-## 📝 Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server with hot reload |
-| `npm run build` | Build production version |
-| `npm run start` | Start production server |
-| `npm run check` | Run TypeScript type checking |
-| `npm run db:push` | Push database schema changes |
-
-## 🧪 Technology Stack
-
-### Frontend
-- **React 18.3.1** - UI library
-- **TypeScript** - Type safety
-- **Vite** - Build tool and dev server
-- **Tailwind CSS** - Utility-first CSS framework
-- **Framer Motion** - Animation library
-- **Radix UI** - Accessible component primitives
-- **React Hook Form** - Form management
-- **Wouter** - Lightweight routing
-
-### Backend
-- **Node.js** - Runtime environment
-- **Express.js** - Web framework
-- **TypeScript** - Type safety
-- **Drizzle ORM** - Database ORM
-- **Passport.js** - Authentication
-- **WebSocket** - Real-time communication
-
-### Blockchain
-- **Ethereum/Polygon** - Smart contract deployment
-- **Solidity** - Smart contract language
-- **ethers.js** - Blockchain interaction
-- **IPFS** - Decentralized file storage
-
-### Development Tools
-- **ESBuild** - Fast bundler
-- **Drizzle Kit** - Database migration tool
-- **Cross-env** - Environment variables
-
-## 🌐 User Roles & Features
-
-### 👨‍💼 Client (Employer)
-- Create and manage projects
-- Define milestone-based payments
-- Fund escrow smart contracts
-- Approve/reject milestone deliverables
-- Manage dispute resolution
-
-### 👩‍💻 Freelancer (Worker)
-- Browse available projects
-- Submit proposals and accept contracts
-- Upload milestone deliverables
-- Track payment status
-- Participate in dispute resolution
-
-## 🔄 Development Workflow
-
-### Branch Structure
-- `main` - Production branch
-- `Ansh` - Ansh's development branch
-- `Devansh` - Devansh's development branch  
-- `Harsh` - Harsh's development branch
-- `Vedant` - Vedant's development branch
-- `Yash` - Yash's development branch
-
-### Working on Features
-
-1. **Switch to your branch:**
-   ```bash
-   git checkout YourName
-   ```
-
-2. **Pull latest changes:**
-   ```bash
-   git pull origin YourName
-   ```
-
-3. **Make your changes and commit:**
-   ```bash
-   git add .
-   git commit -m "feat: your feature description"
-   ```
-
-4. **Push to your branch:**
-   ```bash
-   git push origin YourName
-   ```
-
-### Commit Message Convention
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `docs:` - Documentation changes
-- `style:` - Code style changes
-- `refactor:` - Code refactoring
-- `test:` - Adding tests
-- `chore:` - Maintenance tasks
-
-## 🎨 UI Components
-
-The project uses a comprehensive design system built with:
-
-- **Shadcn/ui** components for consistent styling
-- **Radix UI** primitives for accessibility
-- **Tailwind CSS** for responsive design
-- **Framer Motion** for smooth animations
-- **Lucide React** for modern icons
-
-### Key Components
-- Navigation with wallet connection
-- Project cards with hover animations
-- Milestone progress tracking
-- Payment status indicators
-- Dispute resolution interface
-
-## 🔐 Security Features
-
-- **Smart Contract Escrow** - Funds locked until milestone approval
-- **Dispute Resolution** - Oracle-based conflict resolution
-- **Wallet Authentication** - Secure Web3 login
-- **Input Validation** - Zod schema validation
-- **Session Management** - Secure session handling
-
-## 📱 Responsive Design
-
-- **Mobile-first** approach
-- **Adaptive layouts** for all screen sizes
-- **Touch-friendly** interactions
-- **Progressive enhancement** for better performance
+- `frontend/src/app` - Next.js app router pages
+- `frontend/src/components` - Reusable React components
+- `frontend/src/hooks` - Custom React hooks for blockchain
+- `frontend/src/utils` - Utility functions and contract interactions
+- `backend/src/models` - MongoDB schemas
+- `backend/src/controllers` - Express route handlers
+- `backend/src/routes` - API route definitions
+- `contracts/contracts` - Solidity smart contracts
 
 ## 🤝 Contributing
 
-1. **Choose your branch** based on your name
-2. **Follow the coding standards:**
-   - Use TypeScript for type safety
-   - Follow the existing component structure
-   - Write descriptive commit messages
-   - Test your changes thoroughly
-
-3. **Code Style:**
-   - Use Prettier for formatting
-   - Follow React best practices
-   - Use meaningful variable names
-   - Comment complex logic
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Node modules issues:**
-```bash
-# Delete node_modules and reinstall
-rm -rf node_modules package-lock.json
-npm install
-```
-
-**TypeScript errors:**
-```bash
-# Run type checking
-npm run check
-```
-
-**Database connection issues:**
-```bash
-# Check your DATABASE_URL in .env
-# Run database push again
-npm run db:push
-```
-
-**Port already in use:**
-```bash
-# Kill process on port 3000
-npx kill-port 3000
-```
-
-## 📞 Support
-
-- **GitHub Issues**: [Create an issue](https://github.com/FireFistisDead/SmartPay/issues)
-- **Team Communication**: Use your preferred team chat platform
-- **Documentation**: Check the `/docs` folder for detailed guides
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
+
+## 🔗 Links
+
+- **Demo Version**: [SmartPay-demo](SmartPay-demo/)
+- **GitHub**: [https://github.com/Path3010/SmartPay](https://github.com/Path3010/SmartPay)
+
+## ⚠️ Important Notes
+
+- This is a demo/educational project
+- Use testnet for testing (never mainnet with real funds during development)
+- Always audit smart contracts before production deployment
+- Demo version in `SmartPay-demo/` doesn't require crypto - perfect for testing!
 
 ---
 
-**Happy Coding! 🚀**
+**Made with ❤️ using Next.js, Express, and Solidity**
+- frontend/.env.local
+  - NEXT_PUBLIC_BACKEND_URL: Base URL for the Express API (e.g. <http://localhost:8080>)
+- contracts/.env
+  - SEPOLIA_RPC_URL, MUMBAI_RPC_URL: RPC URLs for deployments
+  - PRIVATE_KEY: Wallet private key for deployments
+  - ETHERSCAN_API_KEY, COINMARKETCAP_API_KEY: Optional verification and gas price APIs
 
-Built with ❤️ by the SmartPay team
+## API Surface
+
+- GET /user/:walletAddress — fetch user profile
+- POST /user/insertProfile — create profile
+- POST /user/update — update profile fields
+- POST /user/updatecredits — adjust credit balance
+- POST /user/reviews/:projectAddress/:userid — add a review
+- GET /reviews/:projectAddress — list reviews for a project
+- GET /submission/:projectAddress — list submissions for a project
+- POST /user/insertSubmission — create or update a submission link
+- PUT /submission/:id/:type/:current — upvote/downvote a submission
+
+## Smart Contracts
+
+- Current deployed addresses
+  - Mumbai: 0x84322cC07D2014D958A19bA1b6E93788FC9F9608
+  - Sepolia: 0x4ed96a857fc902e79b7d9551034c3efa0a369b60
+- ABI and contract address used by the frontend live in frontend/config/config.json
+- Compile/export artifacts
+
+```bash
+npm run compile-export --prefix contracts
+```
+
+## Notes
+
+- Default ports: API 8080, frontend 3000. Update the env files to change them.
+- Ensure MetaMask is connected to the network that matches the contract address in frontend/config/config.json.
+- Static assets and mock data live under frontend/public and frontend/public/data.
+

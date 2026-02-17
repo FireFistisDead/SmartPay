@@ -1,0 +1,71 @@
+# Dependencies
+node_modules/
+**/node_modules/
+package-lock.json
+**/package-lock.json
+
+# Environment Variables
+.env
+.env.local
+.env.development
+.env.production
+**/.env
+**/.env.local
+
+# Build Outputs
+.next/
+**/.next/
+build/
+dist/
+out/
+
+# Cache & Artifacts
+cache/
+artifacts/
+**/cache/
+**/artifacts/
+.cache/
+
+# Hardhat
+contracts/cache/
+contracts/artifacts/
+typechain/
+typechain-types/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.tsbuildinfo
+.eslintcache
+
+# Large Media Files
+*.mp4
+*.mov
+*.avi
+image/Recording.mp4
+Recording.mp4

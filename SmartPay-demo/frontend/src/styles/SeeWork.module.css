@@ -1,0 +1,208 @@
+.cotainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1rem;
+}
+.box > h1 {
+  padding: 0;
+  margin: 0;
+  font-size: var(--ft-800);
+  color: var(--primary-color);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.request_container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1rem;
+  width: 950px;
+  box-shadow: 0 0 15px rgba(129, 129, 129, 0.1);
+  padding: 1rem;
+}
+.reques_container_box {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: -webkit-fill-available;
+  border-radius: 0.5rem;
+}
+
+.reques_container_box > h1 {
+  padding: 0;
+  margin: 0;
+  font-size: var(--ft-400);
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.reques_container_box > h1 > span {
+  font-size: var(--ft-300);
+  color: var(--light-black-color);
+  font-weight: 400;
+}
+.reviewsInput {
+  margin-top: 2rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  max-width: 900px;
+}
+.headingReview {
+  font-size: 2rem;
+  padding-bottom: 1rem;
+  padding-left: 1rem;
+  color: var(--dark-color);
+  font-weight: 600;
+}
+.box_reviews {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 2rem;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+.user_submission {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 900px;
+}
+.box_submission {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0.8rem;
+  padding: 2rem 3rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+}
+.box_submission > h1 {
+  font-size: var(--ft-400);
+  color: var(--primary-color);
+  font-weight: 600;
+}
+.box_submission > p {
+  font-size: var(--ft-300);
+  color: var(--light-black-color);
+  font-weight: 400;
+}
+.box_submission > p > a {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+.box_submission > p > a:hover {
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: underline;
+}
+.box_submission > p {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+}
+.box_submission > button {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  background-color: var(--primary-color);
+  color: var(--white-color);
+  font-size: var(--ft-500);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  margin-top: 1rem;
+}
+.box_submission_voting {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0.8rem;
+  padding: 2rem 3rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+}
+.box_submission_voting > p {
+  font-size: var(--ft-300);
+  color: var(--light-black-color);
+  font-weight: 400;
+}
+.box_submission_voting > p > a {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+.box_submission_voting > p > a:hover {
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: underline;
+}
+.box_submission_voting > p {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+}
+.box_submission_voting > p > svg {
+  margin-left: 1rem;
+  cursor: pointer;
+}
+.box_submission_voting > p > svg :hover {
+  color: var(--primary-color);
+}
+.box_submission_voting > p:nth-child(2),
+.box_submission_voting > p:nth-child(3) {
+  font-size: var(--ft-450);
+}
+.connect_wallet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1rem;
+  box-shadow: 0 0 15px rgba(129, 129, 129, 0.1);
+  padding: 1rem;
+  min-height: 60vh;
+  color: var(--primary-color);
+  font-size: 1.2rem;
+}
+@media screen and (max-width: 1000px) {
+  .request_container {
+    width: -webkit-fill-available;
+  }
+  .user_submission {
+    width: -webkit-fill-available;
+  }
+}
+@media screen and (max-width: 768px) {
+  .connect_wallet {
+    font-size: 0.8rem;
+  }
+}

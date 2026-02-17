@@ -1,0 +1,265 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  max-width: 900px;
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  position: relative;
+}
+.details {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 2rem;
+  padding-bottom: 2rem;
+}
+.title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: -webkit-fill-available;
+}
+.title > h1 {
+  font-size: var(--ft-700);
+  color: var(--btn-active-color);
+  font-weight: 600;
+  text-align: center;
+}
+.time_location {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+.time_location > div > p {
+  font-size: var(--ft-400);
+  font-weight: 400;
+  color: var(--light-black-color);
+}
+.time_location > div > svg {
+  font-size: var(--ft-600);
+  font-weight: 500;
+  color: var(--primary-color);
+}
+.time_location_inside {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+.time_location_inside {
+  font-size: var(--ft-500);
+}
+.description {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+.description > p {
+  font-size: var(--ft-450);
+  font-weight: 400;
+  color: var(--light-black-color);
+}
+.different_logo_box {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: center;
+  gap: 2rem;
+  cursor: pointer;
+}
+.different_logo {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  padding: 0.7rem 1.5rem;
+  border-radius: 0.5rem;
+}
+.different_logo > svg {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--primary-color);
+}
+.different_logo > p {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--light-black-color);
+}
+.bottom {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  width: -webkit-fill-available;
+  gap: 1rem;
+}
+.majorTypeOfTask {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  color: var(--light-black-color);
+  font-size: var(--ft-600);
+}
+.minorTypeOfTask {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  color: var(--light-black-color);
+  font-size: var(--ft-500);
+  font-weight: 500;
+}
+.techStack > h1 {
+  font-size: var(--ft-600);
+  color: var(--btn-active-color);
+  font-weight: 600;
+  text-align: center;
+}
+.techStack {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+.techStack_item {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  padding: 0.5rem 1.2rem;
+  border-radius: 0.5rem;
+  color: var(--light-black-color);
+}
+.button {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  width: -webkit-fill-available;
+}
+.button > button {
+  all: unset;
+  font-size: var(--ft-500);
+  font-weight: 500;
+  color: var(--light-black-color);
+  background-color: var(--btn-color);
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.button > button:hover {
+  background-color: var(--btn-active-color);
+}
+.button > button:active {
+  background-color: var(--btn-active-color);
+}
+.button > button:disabled {
+  background-color: #666666;
+  color: var(--white-color);
+  cursor: not-allowed;
+}
+.button input {
+  all: unset;
+  font-size: var(--ft-500);
+  font-weight: 500;
+  color: var(--white-color);
+  background-color: var(--light-black-color);
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  width: -webkit-fill-available;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+.delete_project {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.2rem;
+}
+.delete_project > button {
+  all: unset;
+  font-size: var(--ft-350);
+  font-weight: 300;
+  color: var(--white-color);
+  background-color: var(--light-black-color);
+  padding: 0.5rem 0.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+@media (max-width: 768px) {
+  .box {
+    padding: 1rem;
+  }
+  .title > h1 {
+    font-size: var(--ft-600);
+  }
+  .time_location > div > p {
+    font-size: var(--ft-350);
+  }
+  .time_location > div > svg {
+    font-size: var(--ft-500);
+  }
+  .time_location_inside {
+    font-size: var(--ft-400);
+  }
+  .description > p {
+    font-size: var(--ft-350);
+  }
+  .different_logo_box {
+    gap: 1rem;
+  }
+  .different_logo > svg {
+    font-size: 1rem;
+  }
+  .different_logo > p {
+    font-size: 1rem;
+  }
+  .majorTypeOfTask {
+    font-size: var(--ft-500);
+  }
+  .minorTypeOfTask {
+    font-size: var(--ft-400);
+  }
+  .techStack > h1 {
+    font-size: var(--ft-500);
+  }
+  .techStack_item {
+    font-size: var(--ft-400);
+  }
+  .button > button {
+    font-size: var(--ft-400);
+  }
+}

@@ -1,0 +1,313 @@
+{
+  "book-cover-design": [
+    {
+      "title": "Fantasy Book Cover",
+      "description": "Design a captivating book cover for a fantasy novel.",
+      "reward": 50,
+      "timeToComplete": 7,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Book Cover",
+      "techStack": "Adobe Illustrator"
+    },
+    {
+      "title": "Mystery Book Cover",
+      "description": "Create an intriguing book cover for a mystery thriller.",
+      "reward": 40,
+      "timeToComplete": 5,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Book Cover",
+      "techStack": "Photoshop"
+    }
+  ],
+  "document-design": [
+    {
+      "title": "Company Brochure",
+      "description": "Design a professional brochure for a company's products and services.",
+      "reward": 30,
+      "timeToComplete": 4,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Document",
+      "techStack": "InDesign"
+    },
+    {
+      "title": "Event Flyer",
+      "description": "Create an eye-catching flyer for a corporate event.",
+      "reward": 20,
+      "timeToComplete": 3,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Document",
+      "techStack": "Canva"
+    }
+  ],
+  "logo-business-card": [
+    {
+      "title": "Tech Startup Logo",
+      "description": "Design a modern logo for a technology startup.",
+      "reward": 40,
+      "timeToComplete": 5,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Business Card",
+      "techStack": "Adobe Illustrator"
+    },
+    {
+      "title": "Business Card Redesign",
+      "description": "Redesign the business card for a marketing agency.",
+      "reward": 25,
+      "timeToComplete": 3,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Business Card",
+      "techStack": "Photoshop"
+    }
+  ],
+  "logo-design": [
+    {
+      "title": "Fashion Brand Logo",
+      "description": "Create a stylish logo for a new fashion brand.",
+      "reward": 35,
+      "timeToComplete": 4,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Logo",
+      "techStack": "Adobe Illustrator"
+    },
+    {
+      "title": "Coffee Shop Logo",
+      "description": "Design a unique logo for a local coffee shop.",
+      "reward": 30,
+      "timeToComplete": 3,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Logo",
+      "techStack": "Canva"
+    },
+    {
+      "title": "Coffee Shop Logo",
+      "description": "Design a unique logo for a local coffee shop.",
+      "reward": 30,
+      "timeToComplete": 3,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Logo",
+      "techStack": "Canva"
+    }
+  ],
+  "mobile-app-design": [
+    {
+      "title": "Fitness App UI",
+      "description": "Design the user interface for a fitness tracking mobile app.",
+      "reward": 60,
+      "timeToComplete": 8,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Mobile App",
+      "techStack": "Figma"
+    },
+    {
+      "title": "Social Media App Redesign",
+      "description": "Redesign the user interface for an existing social media app.",
+      "reward": 50,
+      "timeToComplete": 6,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Mobile App",
+      "techStack": "Sketch"
+    }
+  ],
+  "packaging-design": [
+    {
+      "title": "Product Box Design",
+      "description": "Create an attractive design for the packaging of a new product.",
+      "reward": 45,
+      "timeToComplete": 5,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Mobile App",
+      "techStack": "Adobe Illustrator"
+    },
+    {
+      "title": "Food Packaging Concept",
+      "description": "Design a concept for the packaging of a new food product.",
+      "reward": 35,
+      "timeToComplete": 4,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Packaging",
+      "techStack": "Photoshop"
+    },
+    {
+      "title": "Food Packaging Concept",
+      "description": "Design a concept for the packaging of a new food product.",
+      "reward": 35,
+      "timeToComplete": 4,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Packaging",
+      "techStack": "Photoshop"
+    }
+  ],
+  "sticker-design": [
+    {
+      "title": "Laptop Sticker Set",
+      "description": "Design a set of creative stickers for laptops.",
+      "reward": 20,
+      "timeToComplete": 3,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Sticker",
+      "techStack": "Canva"
+    },
+    {
+      "title": "Environmental Awareness Stickers",
+      "description": "Create stickers to raise awareness about environmental issues.",
+      "reward": 15,
+      "timeToComplete": 2,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Sticker",
+      "techStack": "Adobe Illustrator"
+    }
+  ],
+  "tshirt-design": [
+    {
+      "title": "Graphic Tee Design",
+      "description": "Design a trendy graphic for a new line of t-shirts.",
+      "reward": 25,
+      "timeToComplete": 3,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "T-shirt",
+      "techStack": "Photoshop"
+    },
+    {
+      "title": "Typography T-shirt Design",
+      "description": "Create a typography-based design for a t-shirt.",
+      "reward": 18,
+      "timeToComplete": 2,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "T-shirt",
+      "techStack": "Canva"
+    },
+    {
+      "title": "Typography white-T-shirt Design",
+      "description": "Create a typography-based design for a t-shirt.",
+      "reward": 19,
+      "timeToComplete": 2,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "T-shirt",
+      "techStack": "Canva"
+    }
+  ],
+  "website-design": [
+    {
+      "title": "Brochure Design",
+      "description": "Design a creative brochure for a business.",
+      "reward": 30,
+      "timeToComplete": 4,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Brochure",
+      "techStack": "Adobe InDesign",
+      "image": "brochure-design.webp"
+    },
+    {
+      "title": "Landing Page Design",
+      "description": "Create an engaging design for a landing page.",
+      "reward": 25,
+      "timeToComplete": 3,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Landing Page",
+      "techStack": "Figma",
+      "image": "landing-page-design.webp"
+    },
+    {
+      "title": "Nature Page Website Design",
+      "description": "Design a nature-themed website with a focus on environmental awareness.",
+      "reward": 40,
+      "timeToComplete": 5,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Website",
+      "techStack": "Sketch",
+      "image": "nature-page-website-design.png"
+    },
+    {
+      "title": "Selling Phone Website Design",
+      "description": "Design the user interface for an e-commerce website selling phones.",
+      "reward": 35,
+      "timeToComplete": 4,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Website",
+      "techStack": "Adobe XD",
+      "image": "selling-phone-website-design.jpg"
+    },
+    {
+      "title": "Selling Watch Website Design",
+      "description": "Create an attractive design for an online watch store.",
+      "reward": 38,
+      "timeToComplete": 4,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Website",
+      "techStack": "Figma",
+      "image": "selling-watch-website-design.jpg"
+    },
+    {
+      "title": "Travel Website Design",
+      "description": "Design a visually appealing website for a travel agency.",
+      "reward": 45,
+      "timeToComplete": 6,
+      "majorTypeOfTask": "Design",
+      "minorTypeOfTask": "Website",
+      "techStack": "Adobe XD",
+      "image": "travel-website-design.png"
+    }
+  ],
+  "website-making": [
+    {
+      "title": "Car Selling Website",
+      "description": "Develop a website for selling cars.",
+      "reward": 70,
+      "timeToComplete": 10,
+      "majorTypeOfTask": "Development",
+      "minorTypeOfTask": "Website",
+      "techStack": "React.js, Node.js",
+      "image": "car-selling-website.jpg"
+    },
+    {
+      "title": "Golf Tour Website",
+      "description": "Create a website for promoting golf tours and events.",
+      "reward": 60,
+      "timeToComplete": 8,
+      "majorTypeOfTask": "Development",
+      "minorTypeOfTask": "Website",
+      "techStack": "Vue.js, Laravel",
+      "image": "golf-tour-website.png"
+    },
+    {
+      "title": "Landing Page Website",
+      "description": "Develop a landing page website for a product launch.",
+      "reward": 50,
+      "timeToComplete": 7,
+      "majorTypeOfTask": "Development",
+      "minorTypeOfTask": "Website",
+      "techStack": "React.js, Node.js",
+      "image": "Landing-Page-website.png"
+    },
+    {
+      "title": "Selling Phone Website",
+      "description": "Create an e-commerce website for selling phones.",
+      "reward": 80,
+      "timeToComplete": 12,
+      "majorTypeOfTask": "Development",
+      "minorTypeOfTask": "Website",
+      "techStack": "Angular, Express.js",
+      "image": "selling-phone-website.jpg"
+    },
+    {
+      "title": "Selling Watch Website",
+      "description": "Build a website for selling watches online.",
+      "reward": 75,
+      "timeToComplete": 11,
+      "majorTypeOfTask": "Development",
+      "minorTypeOfTask": "Website",
+      "techStack": "Vue.js, Laravel",
+      "image": "selling-watch-website.jpg"
+    },
+    {
+      "title": "Travel Website",
+      "description": "Develop a travel website showcasing destinations and packages.",
+      "reward": 90,
+      "timeToComplete": 15,
+      "majorTypeOfTask": "Development",
+      "minorTypeOfTask": "Website",
+      "techStack": "React.js, Node.js",
+      "image": "travel-website.png"
+    }
+  ]
+}

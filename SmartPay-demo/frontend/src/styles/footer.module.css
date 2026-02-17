@@ -1,0 +1,108 @@
+.container {
+  padding: 3rem var(--b-pad);
+  padding-top: 0;
+  margin-top: 1rem;
+  background-color: var(--light-black-color);
+}
+.box {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.bottom {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2.5rem;
+  padding: 3rem 1.5rem;
+  padding-bottom: 0rem;
+  width: -webkit-fill-available;
+}
+.bottom_items_box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 2rem;
+}
+.bottom_items_box > h2 {
+  padding: 0;
+  margin: 0;
+  color: var(--white-color);
+  font-size: var(--ft-400);
+  font-weight: 500;
+}
+.bottom_items {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 1.5rem;
+}
+.bottom_item {
+  cursor: pointer;
+  color: var(--paragraph);
+  font-size: var(--ft-400);
+  font-weight: 400;
+}
+.bottom_footer {
+  display: flex;
+  flex-direction: row;
+  padding: 1rem 1.5rem;
+  width: -webkit-fill-available;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--background-color-hamburger);
+}
+.bottom_footer_left {
+  flex: 1 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.bottom_footer_left > p {
+  padding: 0;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--white-color);
+}
+.bottom_footer_left > a {
+  all: unset;
+  padding: 0.2rem 0.75rem;
+  border: 1px solid var(--white-color);
+  font-size: 1rem;
+  border-radius: 0.25rem;
+  text-align: center;
+  cursor: pointer;
+  background-color: #ee0007;
+  border-color: #ee0007;
+  color: var(--white-color);
+}
+.bottom_footer_right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+.bottom_footer_right svg {
+  color: black;
+}
+
+@media screen and (max-width: 640px) {
+  .bottom_footer {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .bottom_footer_left > p {
+    font-size: 1.25rem;
+  }
+}

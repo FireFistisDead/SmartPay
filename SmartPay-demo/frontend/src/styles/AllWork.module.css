@@ -1,0 +1,63 @@
+.cotainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+}
+.cotainer > h1 {
+  font-size: var(--ft-800);
+  font-weight: 700;
+  width: -webkit-fit-content;
+  text-align: center;
+  color: var(--primary-color);
+  padding-top: 1rem;
+}
+.box {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2rem;
+  padding: 3rem 3rem;
+}
+.imageBox {
+  width: 300px;
+  height: 300px;
+  position: relative;
+}
+.imageBox > a > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 0.3rem;
+  cursor: pointer;
+}
+.button {
+  all: unset;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 0.3rem;
+  background-color: var(--primary-color);
+  color: var(--white-color);
+  font-size: var(--ft-400);
+  font-weight: 400;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: none;
+}
+.hover_effect:hover .button {
+  display: block;
+}
+.button:hover {
+  transform: scale(1.05);
+}
+.button > a {
+  color: var(--light-grey-color);
+  text-decoration: none;
+}

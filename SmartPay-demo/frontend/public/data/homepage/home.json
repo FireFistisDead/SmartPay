@@ -1,0 +1,104 @@
+{
+  "our services": [
+    {
+      "heading": "Website Making",
+      "about": "Create a website that suits your needs and captivates your audience. Our website-making services are tailored to provide you with a unique online presence.",
+      "three_key_points": [
+        "Customized website development",
+        "User-friendly design and navigation",
+        "Responsive and mobile-friendly layouts"
+      ],
+      "short_motivation": "Empower your business with a compelling online presence through our expert website-making services."
+    },
+    {
+      "heading": "Website Design",
+      "about": "Transform your ideas into visually stunning websites. Our website design services focus on creating a seamless user experience while incorporating modern and eye-catching designs.",
+      "three_key_points": [
+        "Creative and engaging visual aesthetics",
+        "Intuitive user interface",
+        "Optimized for performance and user satisfaction"
+      ],
+      "short_motivation": "Elevate your online presence with our innovative website design solutions. We bring your vision to life on the digital canvas."
+    }
+  ],
+  "about": {
+    "heading": "FreelancerHub",
+    "short_about": "Connect with skilled freelancers and get work done efficiently. FreelancerHub is a platform that facilitates collaboration between freelancers and clients by providing a seamless process for posting and completing projects.",
+    "short_motivation": "Empower your freelance journey with FreelancerHub. Whether you're looking for freelance work or seeking talented freelancers, our platform is designed to streamline the process and make your experience enjoyable and productive."
+  },
+  "footer": [
+    {
+      "category": "COMPANY",
+      "subcategories": [
+        "About Us",
+        "Contact Us",
+        "FAQs",
+        "Testimonials",
+        "Become an Affiliate",
+        "Press Release",
+        "Partners",
+        "Non Profit"
+      ]
+    },
+    {
+      "category": "SERVICES",
+      "subcategories": [
+        "Website Builder",
+        "One To One Projects",
+        "Graphic & Logo Design Contests",
+        "Creative Gigs",
+        "T-Shirt Printing",
+        "Custom Clothing",
+        "Business Cards",
+        "Custom T-Shirts",
+        "PrintShop",
+        "Templates"
+      ]
+    },
+    {
+      "category": "TOOLS",
+      "subcategories": [
+        "Business Tools",
+        "Logo Maker",
+        "Brand Kit",
+        "T-Shirt Maker",
+        "Business Card Maker",
+        "Flyer Maker",
+        "Comic Maker",
+        "Email Signature Generator",
+        "Digital Business Card",
+        "Gift Cards",
+        "Studio"
+      ]
+    },
+    {
+      "category": "GET A DESIGN",
+      "subcategories": [
+        "Graphic Design",
+        "Logo Design",
+        "Label Design",
+        "Packaging Design",
+        "Website Design",
+        "T-Shirt Design",
+        "Brochure Design",
+        "Book Cover Design",
+        "Business Card Design",
+        "Funny T Shirts"
+      ]
+    },
+    {
+      "category": "RESOURCES",
+      "subcategories": [
+        "Blog",
+        "Graphic Designers",
+        "Awarded Designs",
+        "Interactive Guides",
+        "Logo Ideas",
+        "Events",
+        "Learn",
+        "Size",
+        "Pro Designer"
+      ]
+    }
+  ]
+}

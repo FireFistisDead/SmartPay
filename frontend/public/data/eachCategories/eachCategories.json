@@ -1,0 +1,202 @@
+{
+  "book-cover-design": {
+    "freelancer_work_for_user": {
+      "description": "Hire freelancers specializing in creating captivating book cover designs tailored to your unique requirements.",
+      "four_key_points": [
+        "Customized book cover designs",
+        "Attention-grabbing visuals",
+        "Professional and creative concepts",
+        "Fast and reliable service"
+      ]
+    },
+    "create_new_work_for_others": {
+      "description": "Offer your expertise in book cover design and create new projects for clients looking for unique and professional designs.",
+      "four_key_points": [
+        "Showcase your design skills",
+        "Collaborate with clients for personalized projects",
+        "Flexible work arrangements",
+        "Build a strong portfolio with diverse projects"
+      ]
+    }
+  },
+  "letterhead-design": {
+    "freelancer_work_for_user": {
+      "description": "Connect with freelancers offering professional letterhead design services for your personal or business needs.",
+      "four_key_points": [
+        "Tailored letterhead designs",
+        "Corporate and brand-aligned layouts",
+        "Quick turnaround time",
+        "High-quality and print-ready files"
+      ]
+    },
+    "create_new_work_for_others": {
+      "description": "Utilize your letterhead design skills to create projects for clients seeking professional and customized letterhead designs.",
+      "four_key_points": [
+        "Offer personalized design solutions",
+        "Collaborate with clients for brand consistency",
+        "Flexible project options",
+        "Build a reputation for delivering top-notch designs"
+      ]
+    }
+  },
+  "logo-business-card": {
+    "freelancer_work_for_user": {
+      "description": "Connect with freelancers offering logo and business card design services to enhance your personal or business brand identity.",
+      "four_key_points": [
+        "Strategic logo design for brand recognition",
+        "Professional business card layouts",
+        "Consistent branding across platforms",
+        "Expertise in creating memorable visual identities"
+      ]
+    },
+    "create_new_work_for_others": {
+      "description": "Utilize your logo and business card design skills to create new projects for clients seeking impactful and cohesive brand identities.",
+      "four_key_points": [
+        "Offer strategic branding solutions",
+        "Collaborate with clients for effective visual communication",
+        "Flexible project arrangements",
+        "Build a portfolio with diverse branding projects"
+      ]
+    }
+  },
+  "logo-design": {
+    "freelancer_work_for_user": {
+      "description": "Connect with freelancers specializing in creating unique and impactful logos for businesses and brands.",
+      "four_key_points": [
+        "Custom logo design solutions",
+        "Versatile and scalable designs",
+        "Collaborate with experienced logo designers",
+        "Receive high-quality and memorable logos"
+      ]
+    },
+    "create_new_work_for_others": {
+      "description": "Showcase your logo design expertise by creating new projects for clients seeking distinctive and memorable logos.",
+      "four_key_points": [
+        "Present innovative logo concepts",
+        "Collaborate with clients for personalized branding",
+        "Flexible project arrangements",
+        "Build a portfolio with diverse logo projects"
+      ]
+    }
+  },
+  "mobile-app-design": {
+    "freelancer_work_for_user": {
+      "description": "Connect with freelancers offering user-friendly and visually appealing mobile app design services.",
+      "four_key_points": [
+        "Intuitive and user-centric app design",
+        "Adaptable to various platforms and devices",
+        "Collaborate with experienced app designers",
+        "Ensure a seamless user experience in your app"
+      ]
+    },
+    "create_new_work_for_others": {
+      "description": "Utilize your mobile app design skills to create new projects for clients seeking innovative and engaging app designs.",
+      "four_key_points": [
+        "Offer fresh and modern app design ideas",
+        "Collaborate with clients for personalized app experiences",
+        "Flexible project options",
+        "Build a portfolio with diverse app design projects"
+      ]
+    }
+  },
+  "packaging-design": {
+    "freelancer_work_for_user": {
+      "description": "Connect with freelancers offering creative and effective packaging design solutions for your products.",
+      "four_key_points": [
+        "Strategic and eye-catching packaging designs",
+        "Align with your brand identity",
+        "Quick turnaround time for your projects",
+        "High-quality and print-ready packaging files"
+      ]
+    },
+    "create_new_work_for_others": {
+      "description": "Utilize your packaging design skills to create new projects for clients seeking impactful and visually appealing product packaging.",
+      "four_key_points": [
+        "Offer creative packaging solutions",
+        "Collaborate with clients for brand consistency",
+        "Flexible project arrangements",
+        "Build a portfolio with diverse packaging projects"
+      ]
+    }
+  },
+  "sticker-design": {
+    "freelancer_work_for_user": {
+      "description": "Connect with freelancers specializing in creating visually appealing and memorable sticker designs.",
+      "four_key_points": [
+        "Custom sticker design solutions",
+        "Versatile and creative concepts",
+        "Collaborate with experienced sticker designers",
+        "Receive high-quality and impactful sticker designs"
+      ]
+    },
+    "create_new_work_for_others": {
+      "description": "Showcase your sticker design expertise by creating new projects for clients seeking unique and eye-catching stickers.",
+      "four_key_points": [
+        "Present modern and innovative sticker design concepts",
+        "Collaborate with clients for personalized sticker designs",
+        "Flexible project arrangements",
+        "Build a portfolio with diverse sticker design projects"
+      ]
+    }
+  },
+  "tshirt-design": {
+    "freelancer_work_for_user": {
+      "description": "Connect with freelancers offering creative and personalized t-shirt design solutions.",
+      "four_key_points": [
+        "Custom t-shirt design concepts",
+        "Quality and comfortable designs",
+        "Collaborate with experienced t-shirt designers",
+        "Receive high-quality and stylish t-shirt designs"
+      ]
+    },
+    "create_new_work_for_others": {
+      "description": "Utilize your t-shirt design skills to create new projects for clients seeking trendy and unique t-shirt designs.",
+      "four_key_points": [
+        "Offer modern and fashionable t-shirt design solutions",
+        "Collaborate with clients for personalized apparel designs",
+        "Flexible project options",
+        "Build a portfolio with diverse t-shirt design projects"
+      ]
+    }
+  },
+  "website-design": {
+    "freelancer_work_for_user": {
+      "description": "Connect with freelancers specializing in creating visually appealing and user-friendly website designs.",
+      "four_key_points": [
+        "Custom website design solutions",
+        "Responsive and intuitive layouts",
+        "Collaborate with experienced web designers",
+        "Enhance the online presence of your business"
+      ]
+    },
+    "create_new_work_for_others": {
+      "description": "Utilize your website design skills to create new projects for clients seeking innovative and modern website designs.",
+      "four_key_points": [
+        "Present innovative and user-centric website design ideas",
+        "Collaborate with clients for personalized online experiences",
+        "Flexible project arrangements",
+        "Build a portfolio with diverse website design projects"
+      ]
+    }
+  },
+  "website-making": {
+    "freelancer_work_for_user": {
+      "description": "Connect with freelancers offering website-making services tailored to create a unique online presence for your business.",
+      "four_key_points": [
+        "Customized website development",
+        "User-friendly design and navigation",
+        "Responsive and mobile-friendly layouts",
+        "Collaborate with experienced website developers"
+      ]
+    },
+    "create_new_work_for_others": {
+      "description": "Utilize your website-making skills to create new projects for clients seeking customized and functional online solutions.",
+      "four_key_points": [
+        "Offer innovative and user-centric website-making ideas",
+        "Collaborate with clients for tailored website development",
+        "Flexible project arrangements",
+        "Build a portfolio with diverse website-making projects"
+      ]
+    }
+  }
+}

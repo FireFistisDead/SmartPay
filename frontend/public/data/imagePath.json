@@ -1,0 +1,50 @@
+{
+  "book-cover-design": [
+    "book-cover-design.webp",
+    "the-fire-book-cover-design.jpg"
+  ],
+  "document-design": ["letter-design.jpg", "letterhead-design.webp"],
+  "logo-business-card": [
+    "insight-logo-business-card.webp",
+    "vitality-business-logo-design.jpg"
+  ],
+  "logo-design": [
+    "logo-business-card.webp",
+    "millennium-logo-design.webp",
+    "trilongle-logo-design.jpg"
+  ],
+  "mobile-app-design": [
+    "daily-weather-mobile-app.jpg",
+    "kargoo-mobile-app-design.webp"
+  ],
+  "packaging-design": [
+    "3d-box-cover-design.jpg",
+    "packaging-head-phone-design.webp",
+    "Product-Packaging-design.jpg"
+  ],
+  "sticker-design": [
+    "arteverie-sticker-design.webp",
+    "bitcoin-sticker-design.jpeg"
+  ],
+  "tshirt-design": [
+    "black-tshirt-design.jpg",
+    "hodi-design.jpg",
+    "white-tshirt-design.webp"
+  ],
+  "website-design": [
+    "brochure-design.webp",
+    "landing-page-design.webp",
+    "nature-page-website-design.png",
+    "selling-phone-website-design.jpg",
+    "selling-watch-website-design.jpg",
+    "travel-website-design.png"
+  ],
+  "website-making": [
+    "car-selling-website.jpg",
+    "golf-tour-website.png",
+    "Landing-Page-website.png",
+    "selling-phone-website.jpg",
+    "selling-watch-website.jpg",
+    "travel-website.png"
+  ]
+}

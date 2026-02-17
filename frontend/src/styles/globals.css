@@ -1,0 +1,119 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-primary);
+  max-width: 1800px;
+  margin: auto;
+  overflow-x: hidden;
+  width: 100%;
+}
+a {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+::-webkit-scrollbar {
+  display: none;
+}
+:root {
+  --primary-color: #2563eb;
+  --black-color: #000000;
+  --light-black-color: #1e293b;
+  --white-color: #ffffff;
+  --light-gray-color: #f8fafc;
+
+  --btn-color: #2563eb;
+  --btn-active-color: #1d4ed8;
+
+  --bg-primary: #ffffff;
+  --paragraph: #64748b;
+
+  --b-pad: 4rem;
+  --stock: #334155;
+
+  /* font size */
+  --ft-300: 12px;
+  --ft-350: 14px;
+  --ft-400: 16px;
+  --ft-450: 18px;
+  --ft-500: 20px;
+  --ft-600: 24px;
+  --ft-650: 26px;
+  --ft-700: 28px;
+  --ft-800: 40px;
+  --ft-900: 54px;
+
+  --background-color-account: linear-gradient(
+    126deg,
+    #010314 4.79%,
+    #2a2b3a 54.4%
+  );
+}
+
+/* Wallet */
+.wallet-details {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.wallet-btn,
+.install-link {
+  border: none;
+  padding: 10px 16px;
+  background-color: var(--primary-color);
+  border-radius: 4px;
+  color: #202020;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.wallet-details > h3,
+.wallet-details > p {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--Text);
+}
+.wallet-details > p > span,
+.wallet-details > h3 > span {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--Text);
+}
+.wallet-details > h3 {
+  white-space: nowrap;
+  margin-bottom: 0.5rem;
+}
+.spin {
+  position: relative;
+}
+.spin {
+  animation: 1.5s linear infinite spinner;
+  animation-play-state: inherit;
+  border: solid 5px var(--light-black-color);
+  border-bottom-color: var(--primary-color);
+  border-radius: 50%;
+  content: "";
+  height: 30px;
+  width: 30px;
+  margin: 0 2rem;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+@keyframes spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
